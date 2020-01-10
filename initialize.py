@@ -64,4 +64,6 @@ def tokenize(eq):
                 # raise Exception(ERROR)
                 eq_list.append(eq[n])
 
+    eq_list.append('$')
+
     return eq_list

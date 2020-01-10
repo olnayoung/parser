@@ -22,7 +22,6 @@ def calcul(eq):
         print('f =', eq)
         eq_list = tokenize(eq)
         print('tokens:', eq_list)
-        eq_list.append('$')
 
         E = Parser(eq_list)
         print('tree: ', str(E))

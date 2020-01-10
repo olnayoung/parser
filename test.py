@@ -4,9 +4,14 @@ from extra_funcs import is_gathered
 from extra_funcs import many_mul
 from calculator import calcul
 
+n = 0
 
-input = ['-1', '3^2', '1+2', '-']
+f = open('/home/ny/t_codes/pilot1/test_case.txt', 'r')
+line = f.read().splitlines()
 
-for n in range(len(input)):
+for n in range(len(line)):
     print('////',n+1,'////')
-    print(calcul(input[n]), end='\n\n')
+    print(calcul(line[n]), end='\n\n')
+    n += 1
+    
+f.close()
