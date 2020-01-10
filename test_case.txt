@@ -5,6 +5,6 @@ x+1
 sin(x^2+2*x+1)
 log(x^2)
 -3^2
-sin(x) + tan(y)
+sin(x)+tan(y)
 x^2^(y+20)/x+1
-tan(150)^2 * -3^2
+tan(150)^2*-3^2
