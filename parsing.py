@@ -2,6 +2,13 @@ from math import e, log, sin, cos, tan
 
 NUMBER = [float, int]
 
+class Variable():
+# a * x^b * y^c
+    def __init__(self, a, b, c):
+        self.a = a
+        self.b = b
+        self.c = c
+
 class Expr(object):
     def __init__(self, term, exprTail):
         self.term = term
@@ -250,6 +257,9 @@ def takeSequence(tokens):
         tokens.takeIt()
         app = takeApp(tokens)
         return Sequence(app, '-')
+    else:
+        app = takeApp(tokens)
+        return Sequence(app)
 
 def takeApp(tokens):
     deer = takeDeer(tokens)
