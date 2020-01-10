@@ -25,7 +25,7 @@ def calcul(eq):
 
         E = Parser(eq_list)
         print('tree: ', str(E))
-        ans = E.eval()
+        # ans = E.eval()
         # print('ans:', ans.a, ans.b, ans.c)
 
         return E.eval()
