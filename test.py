@@ -6,7 +6,7 @@ from calculator import calcul
 
 n = 0
 
-f = open('/home/ny/t_codes/pilot1/test_case.txt', 'r')
+f = open('/home/ny/t_codes/test_case.txt', 'r')
 line = f.read().splitlines()
 
 for n in range(len(line)):

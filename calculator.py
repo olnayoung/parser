@@ -25,7 +25,9 @@ def calcul(eq):
 
         E = Parser(eq_list)
         print('tree: ', str(E))
-        print('ans:', E.eval())
+        ans = E.eval()
+        print(ans)
+        # print('ans:', ans.a, ans.b, ans.c)
 
     except Exception as e:
         print('Error: ', e)

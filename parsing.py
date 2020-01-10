@@ -1,8 +1,9 @@
+from extra_funcs import is_digit
 from math import e, log, sin, cos, tan
 
 NUMBER = [float, int]
 
-class Variable():
+class Variables():
 # a * x^b * y^c
     def __init__(self, a, b, c):
         self.a = a
@@ -84,20 +85,23 @@ class TermTail(object):
         return "TermTail(%s, %s, %s)" %(self.op, self.sequence, self.termTail)
 
 class Sequence(Expr):
-    def __init__(self, app, sign = None):
+    def __init__(self, app, sequenceTail):
         self.app = app
-        self.sign = sign
+        self.sequenceTail = sequenceTail
 
     def eval(self):
+        if self.app is None:
+            return None
+
         left = self.app.eval()
 
-        if self.sign == '-':
-            return -left
-        else:
+        if self.sequenceTail is None:
             return left
+        else:
+            return self.sequenceTail.calc(left)
 
     def __repr__(self):
-        return "Sequence(%s, %s)" %(self.app, self.sign)
+        return "Sequence(%s, %s)" %(self.app, self. sequenceTail)
 
 class SequenceTail(object):
     def __init__(self, sign, app, sequenceTail):
@@ -106,15 +110,15 @@ class SequenceTail(object):
         self.sequenceTail = sequenceTail
 
     def calc(self, left):
-        app = self.app.eval()
+        if self.app is not None:
+            left = self.app.eval()
 
-        if self.sign is '-':
-            left = -app
-
-        if self.sequenceTail is None:
-            return left
+            if self.sequenceTail is None:
+                return -left
+            else:
+                return -self.sequenceTail.calc(left)
         else:
-            return self.sequenceTail.calc(left)
+            return -self.sequenceTail
 
     def __repr__(self):
         return "SequenceTail(%s, %s, %s)" %(self.sign, self.app, self.sequenceTail)
@@ -125,6 +129,9 @@ class App(Expr):
         self.appTail = appTail
 
     def eval(self):
+        if self.deer == None:
+            return None
+
         left = self.deer.eval()
 
         if self.appTail is None:
@@ -142,6 +149,9 @@ class AppTail(object):
         self.appTail = appTail
 
     def calc(self, left):
+        if self.deer == None:
+            return None
+
         deer = self.deer.eval()
 
         if self.op is '^':
@@ -161,12 +171,17 @@ class Deer(Expr):
         self.deerTail = deerTail
 
     def eval(self):
-        left = self.factor.eval()
-
-        if self.deerTail is None:
-            return left
+        if self.factor is not None:
+            left = self.factor.eval()
+            if self.deerTail is None:
+                return left
+            else:
+                return self.deerTail.calc(left)
         else:
-            return self.deerTail.calc(left)
+            if self.deerTail is None:
+                return None
+            else:
+                return self.deerTail.calc()
 
     def __repr__(self):
         return "Deer(%s, %s)" %(self.factor, self.deerTail)
@@ -177,9 +192,11 @@ class DeerTail(Expr):
         self.factor = factor
         self.deerTail = deerTail
 
-    def calc(self, left):
+    def calc(self):
         self.funcs = {'log': log, 'sin': sin, 'cos': cos, 'tan': tan}
         funcs_list = ['log', 'sin', 'cos', 'tan']
+
+        left = self.factor.eval()
         if self.func in funcs_list:
             func = self.funcs[self.func]
             left = func(left)
@@ -197,6 +214,20 @@ class Factor(Expr):
         self.expr = expr
 
     def eval(self):
+        # if isinstance(self.expr, Expr):
+        #     return self.expr.eval()
+        # else:
+            # ex = self.expr
+
+            # if is_digit(ex):
+            #     variable = Variables(ex, 0, 0)
+            # elif ex == 'x':
+            #     variable = Variables(1, 1, 0)
+            # elif ex == 'y':
+            #     variable = Variables(1, 0, 1)
+            
+            # return variable
+
         ex = self.expr.eval() if isinstance(self.expr, Expr) else self.expr
         return ex
 
@@ -214,7 +245,7 @@ class TokenList(object):
         return self.tokens[self.n - 1]
 
     def isType(self, tokenType):
-        return self.tokens[self.n] is tokenType or (type(tokenType) is list and self.tokens[self.n].__class__ in tokenType) or tokenType == ('x' or 'y')
+        return self.tokens[self.n] is tokenType or (type(tokenType) is list and self.tokens[self.n].__class__ in tokenType) or self.tokens[self.n] == ('x' or 'y')
 
     def takeIt(self, tokenType = None):
         if tokenType is None or self.isType(tokenType):
@@ -253,13 +284,16 @@ def takeTermTail(tokens):
         return TermTail(op, sequence, termTail)
 
 def takeSequence(tokens):
+    app = takeApp(tokens)
+    sequenceTail = takeSequenceTail(tokens)
+    return Sequence(app, sequenceTail)
+
+def takeSequenceTail(tokens):
     if tokens.isType('-'):
         tokens.takeIt()
         app = takeApp(tokens)
-        return Sequence(app, '-')
-    else:
-        app = takeApp(tokens)
-        return Sequence(app)
+        sequenceTail = takeSequenceTail(tokens)
+        return SequenceTail('-', app, sequenceTail)
 
 def takeApp(tokens):
     deer = takeDeer(tokens)
@@ -280,7 +314,7 @@ def takeDeer(tokens):
 
 def takeDeerTail(tokens):
     funcs_list = ['log', 'sin', 'cos', 'tan']
-    if tokens.item in funcs_list:
+    if tokens.item() in funcs_list:
         func = tokens.takeIt()
         factor = takeFactor(tokens)
         deerTail = takeDeerTail(tokens)
@@ -292,7 +326,7 @@ def takeFactor(tokens):
         expr = takeExpr(tokens)
         tokens.takeIt(')')
         return Factor(expr)
-    else:
+    elif is_digit(tokens.item()) or tokens.item() == ('x' or 'y'):
         num = tokens.takeIt(NUMBER)
         return Factor(num)
 
