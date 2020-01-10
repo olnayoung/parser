@@ -26,11 +26,13 @@ def calcul(eq):
         E = Parser(eq_list)
         print('tree: ', str(E))
         ans = E.eval()
-        print(ans)
         # print('ans:', ans.a, ans.b, ans.c)
+
+        return E.eval()
 
     except Exception as e:
         print('Error: ', e)
+        return 'Error'
 
 
 # if __name__ == "__main__":
