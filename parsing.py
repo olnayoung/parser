@@ -138,6 +138,7 @@ class Factor(Expr):
         elif self.sign in self.funcs_list:
             func = self.funcs[self.sign]
             return func(temp)
+        
         return temp
 
     def __repr__(self):
@@ -159,7 +160,7 @@ class TokenList(object):
     def takeIt(self, tokenType = None):
         funcs_list = ['log', 'sin', 'cos', 'tan']
 
-        if tokenType is None or self.isType(tokenType) or tokenType in funcs_list or self.tokens[self.n] in ['x', 'y']:
+        if tokenType is None or self.isType(tokenType) or tokenType in funcs_list or self.tokens[self.n] in ['x', 'y', 'e', 'pi']:
             token = self.shift()
             return token
         else:
