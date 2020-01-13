@@ -4,7 +4,7 @@ def tokenize(eq):
     eq_list = []
     var_list = ['x', 'y']
     funcs_list = ['log', 'sin', 'cos', 'tan']
-    op_list = ['+', '-', '*', '/', '^', '(', ')']
+    op_list = ['+', '-', '*', '/', '^', '(', ')', ',']
     temp = '0'
 
     for n in range(len(eq)):

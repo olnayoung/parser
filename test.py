@@ -4,28 +4,38 @@ from extra_funcs import is_gathered
 from extra_funcs import many_mul
 from calculator import calcul
 from calculator import change_x_to_num
+from extra_funcs import multiply
+from extra_funcs import plus
+from extra_funcs import from_list_to_str
+from extra_funcs import power
+from extra_funcs import many_div
 
-n = 0
-correct = 0
+print(calcul('2/(1+1/x)'))
 
-f = open('/home/ny/t_codes/test_case.txt', 'r')
-ff = open('/home/ny/t_codes/answer.txt', 'r')
-line = f.read().splitlines()
-answers = ff.read().splitlines()
 
-for n in range(len(line)):
-    print('////',n+1,'////')
-    ans = calcul(line[n])
-    # print('mine:', ans, ', answer:', answers[n])
+# n = 0
+# correct = 0
 
-    # if ans is not 'Error' and str(ans) == answers[n]:
-    #     correct += 1
+# f = open('/home/ny/t_codes/test_case.txt', 'r')
+# ff = open('/home/ny/t_codes/answer.txt', 'r')
+
+
+# line = f.read().splitlines()
+# answers = ff.read().splitlines()
+
+# for n in range(len(line)):
+#     print('////',n+1,'////')
+#     ans = calcul(line[n])
+#     print('mine:', ans, ', answer:', answers[n])
+
+#     # if ans is not 'Error' and str(ans) == answers[n]:
+#     #     correct += 1
     
-    if ans is not 'Error':
-        correct += 1
-    print()
-    n += 1
+#     if ans is not 'Error':
+#         correct += 1
+#     print()
+#     n += 1
     
-f.close()
+# f.close()
 
-print('total:',  correct, '/', len(line))
+# print('total:',  correct, '/', len(line))

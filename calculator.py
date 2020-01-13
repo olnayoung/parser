@@ -13,10 +13,10 @@ def calcul(eq):
 
         E = Parser(eq_list)
         print('tree: ', str(E))
-        # ans = E.eval()
-        # print('ans:', ans.a, ans.b, ans.c)
+        ans = E.eval()
+        print(ans)
 
-        # return E.eval()
+        return from_list_to_str('', ans)
 
     except Exception as e:
         print('Error: ', e)

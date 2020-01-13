@@ -6,12 +6,23 @@
 # S' := '^' F S'
 # F  := '(' E ')' | '-' F | int | log F | sin F | ...
 
-from math import log, sin, cos, tan
+from math import log, sin, cos, tan, pi, e
 from extra_funcs import is_digit
-from extra_funcs import multiply
-from extra_funcs import div
+from extra_funcs import is_gathered
+from extra_funcs import many_mul
+from extra_funcs import plus
+from extra_funcs import minus
+from extra_funcs import power
+from extra_funcs import many_div
 
 NUMBER = [float, int]
+
+class Variables():
+    def __init__(self, a, b, c):
+        self.a = a
+        self.b = b
+        self.c = c
+
 
 class Expr(object):
     def __init__(self, term, exprTail):
@@ -37,9 +48,9 @@ class ExprTail(object):
         eval_t = self.term.eval()
         
         if self.op is '+':
-            left = left + eval_t
+            left = plus(left, eval_t)
         elif self.op is '-':
-            left = left - eval_t
+            left = minus(left, eval_t)
 
         if self.exprTail is None:
             return left
@@ -75,9 +86,13 @@ class TermTail(object):
         sequence = self.sequence.eval()
 
         if self.op is '*':
-            left *= sequence
+            left = many_mul([], left, sequence)
+
         elif self.op is '/':
-            left /= sequence
+            left = many_div([], left, sequence)
+            
+        if is_gathered(left) and len(left[0]) == 1:
+            left = left[0]
 
         if self.termTail is None:
             return left
@@ -113,7 +128,7 @@ class SequenceTail(object):
         factor = self.factor.eval()
 
         if self.op == '^':
-            left = left ** factor
+            left = power(left, factor)
         
         if self.sequenceTail is None:
             return left
@@ -124,20 +139,48 @@ class SequenceTail(object):
         return "SequenceTail(%s, %s, %s)" %(self.op, self.factor, self.sequenceTail)
 
 class Factor(Expr):
-    def __init__(self, expr, sign = None):
+    def __init__(self, expr, sign = None, base = None):
         self.expr = expr
         self.sign = sign
-        self.funcs = {'log': log, 'sin': sin, 'cos': cos, 'tan': tan}
-        self.funcs_list = ['log', 'sin', 'cos', 'tan']
+        self.funcs = {'sin': sin, 'cos': cos, 'tan': tan}
+        self.funcs_list = ['sin', 'cos', 'tan']
+        self.base = base
 
     def eval(self):
         temp = self.expr.eval() if isinstance(self.expr, Expr) else self.expr
+        if temp in ['x', 'y']:
+            temp = [1, temp, 1]
+        elif is_digit(temp):
+            temp = [temp]
+        else:
+            if is_gathered(temp) and len(temp[0]) == 1:
+                temp = temp[0]
+
         if self.sign is '-':
-            temp *= -1
+            temp = many_mul([], [-1], temp)
             return temp
+
         elif self.sign in self.funcs_list:
             func = self.funcs[self.sign]
-            return func(temp)
+
+            if is_digit(temp[0]) and len(temp) == 1:
+                return [func(temp[0])]
+            else:
+                return [1, [self.sign, temp], 1]
+
+        elif self.sign == 'log':
+            if self.base == None:
+                if is_digit(temp[0]) and len(temp) == 1:
+                    return [log(temp[0], e)]
+                else:
+                    return [1, ['log', temp, [e]], 1]
+            else:
+                base = self.base.eval() if isinstance(self.base, Expr) else self.base
+
+                if is_digit(temp[0]) and len(temp) == 1 and is_digit(base[0]) and len(base) == 1:
+                    return [log(temp[0], base[0])]
+                else:
+                    return [1, ['log', temp, base], 1]
         
         return temp
 
@@ -160,7 +203,7 @@ class TokenList(object):
     def takeIt(self, tokenType = None):
         funcs_list = ['log', 'sin', 'cos', 'tan']
 
-        if tokenType is None or self.isType(tokenType) or tokenType in funcs_list or self.tokens[self.n] in ['x', 'y', 'e', 'pi']:
+        if tokenType is None or self.isType(tokenType) or tokenType in funcs_list or self.tokens[self.n] in ['x', 'y', 'e', 'pi', ',']:
             token = self.shift()
             return token
         else:
@@ -208,7 +251,7 @@ def takeSequenceTail(tokens):
         return SequenceTail(op, factor, sequenceTail)
 
 def takeFactor(tokens):
-    funcs_list = ['log', 'sin', 'cos', 'tan']
+    funcs_list = ['sin', 'cos', 'tan']
 
     if tokens.isType('('):
         tokens.takeIt('(')
@@ -224,8 +267,24 @@ def takeFactor(tokens):
     elif tokens.getItem() in funcs_list:
         func = tokens.getItem()
         tokens.takeIt(func)
-        factor = takeFactor(tokens)
-        return Factor(factor, func)
+        tokens.takeIt('(')
+        expr = takeExpr(tokens)
+        tokens.takeIt(')')
+        return Factor(expr, func)
+
+    elif tokens.getItem() == 'log':
+        func = tokens.getItem()
+        tokens.takeIt(func)
+        tokens.takeIt('(')
+        expr1 = takeExpr(tokens)
+        expr2 = None
+        
+        if tokens.getItem() == ',':
+            tokens.takeIt(',')
+            expr2 = takeExpr(tokens)
+        tokens.takeIt(')')
+        # factor = takeFactor(tokens)
+        return Factor(expr1, func, expr2)  # log(expr1, expr2) = log_expr2 (expr1)
 
     else:
         num = tokens.takeIt(NUMBER)
