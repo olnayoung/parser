@@ -13,9 +13,11 @@ from extra_funcs import divide
 from extra_funcs import minus
 from extra_funcs import in_eq_domain
 from extra_funcs import eq_domain
+from extra_funcs import diff
 
-print(calcul('(x^2-1)^((1/2))'))
-
+# print(calcul('x+1'))
+print(diff([2,'x',3,[[1],[1,'x',1]],4], 'x'))
+# [2,'x',3,[[1],[1,'x',1],3],4]
 
 # n = 0
 # correct = 0

@@ -88,10 +88,18 @@ class Term(Expr):
         else:
             for m in range(int(len(domain)/2)):
                 idx = 2*m + 1
-                if domain[idx+1] < 0:
-                    eq.append(domain[idx])
-                elif 0 < domain[idx+1] < 1:
-                    in_eq.append(domain[idx])
+
+                if is_digit(domain[idx+1]):
+                    if domain[idx+1] < 0:    
+                        eq.append(domain[idx])
+                    elif 0 < domain[idx+1] < 1:
+                        in_eq.append(domain[idx])
+                else:
+                    if len(domain[idx+1]) == 1:
+                        if domain[idx+1][0] < 0:    
+                            eq.append(domain[idx])
+                        elif 0 < domain[idx+1][0] < 1:
+                            in_eq.append(domain[idx])
 
         return domain
 

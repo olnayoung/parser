@@ -394,3 +394,61 @@ def in_eq_domain(in_eq, var_list):
         #     domain.append(ans.args[m])
             
     return domain
+
+
+def diff(input, var):
+    output = []
+
+    if is_gathered(input):
+        for t in range(len(input)):
+            temp = diff(input[t], var)
+
+            if temp != [0]:
+                output.append(temp[0])
+
+    else:            
+        check = 0
+        for n in range(int(len(input)/2)):
+
+            input_rep = []
+            for m in range(len(input)):
+                input_rep.append(input[m])
+
+            idx = 2*n + 1
+            if input[idx] == var:
+                i_idx = input_rep.index(var)
+
+                check = 1
+
+                input_rep[0] *= input[idx+1]
+                input_rep[i_idx+1] -= 1
+
+                if input_rep[i_idx+1] == 0:
+                    del input_rep[i_idx]
+                    del input_rep[i_idx]
+
+                output.append(input_rep)
+
+            elif isinstance(input[idx], list):
+                temp = diff(input[idx], var)
+
+                if temp == [0]:
+                    del input_rep[idx]
+                    del input_rep[idx]
+
+                else:
+                    input_rep[0] *= input_rep[idx+1]
+                    input_rep[idx+1] -= 1
+
+                    if input_rep[idx+1] == 0:
+                        del input_rep[idx]
+                        del input_rep[idx]
+
+                    input_rep.append(temp)
+
+                output.append(input_rep)
+
+        if not check:
+            return [0]
+
+    return output
