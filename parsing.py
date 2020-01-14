@@ -17,12 +17,6 @@ from extra_funcs import many_div
 
 NUMBER = [float, int]
 
-class Variables():
-    def __init__(self, a, b, c):
-        self.a = a
-        self.b = b
-        self.c = c
-
 
 class Expr(object):
     def __init__(self, term, exprTail):
@@ -34,6 +28,9 @@ class Expr(object):
             return self.term.eval()
         else:
             return self.exprTail.calc(self.term.eval())
+
+    def get_domain(self):
+        return eq, in_eq
 
     def __repr__(self):
         return "Expr(%s, %s)" % (self.term, self.exprTail)
@@ -69,9 +66,39 @@ class Term(Expr):
         left = self.sequence.eval()
 
         if self.termTail is None:
-            return left
+            domain = left
         else:
-            return self.termTail.calc(left)
+            domain = self.termTail.calc(left)
+
+        if is_gathered(domain):
+            for n in range(len(domain)):
+                for m in range(int(len(domain[n])/2)):
+                    idx = 2*m + 1
+                    if is_digit(domain[n][idx+1]):
+                        if domain[n][idx+1] < 0:    
+                            eq.append(domain[n][idx])
+                        elif 0 < domain[n][idx+1] < 1:
+                            in_eq.append(domain[n][idx])
+                    else:
+                        if len(domain[n][idx+1]) == 1:
+                            if domain[n][idx+1][0] < 0:    
+                                eq.append(domain[n][idx])
+                            elif 0 < domain[n][idx+1][0] < 1:
+                                in_eq.append(domain[n][idx])
+        else:
+            for m in range(int(len(domain)/2)):
+                idx = 2*m + 1
+                if domain[idx+1] < 0:
+                    eq.append(domain[idx])
+                elif 0 < domain[idx+1] < 1:
+                    in_eq.append(domain[idx])
+
+        return domain
+
+        # if self.termTail is None:
+        #     return left
+        # else:
+        #     return self.termTail.calc(left)
 
     def __repr__(self):
         return "Term(%s, %s)" % (self.sequence, self.termTail)
@@ -128,7 +155,10 @@ class SequenceTail(object):
         factor = self.factor.eval()
 
         if self.op == '^':
-            left = power(left, factor)
+            if factor == [2]:
+                left = many_mul([], left, left)
+            else:
+                left = power(left, factor)
         
         if self.sequenceTail is None:
             return left
@@ -148,15 +178,14 @@ class Factor(Expr):
 
     def eval(self):
         temp = self.expr.eval() if isinstance(self.expr, Expr) else self.expr
-        if temp in ['x', 'y']:
+        if temp in var_list:
             temp = [1, temp, 1]
         elif is_digit(temp):
             temp = [temp]
         elif temp in ['e', 'pi']:
             temp = [self.funcs[temp]]
-        # else:
-        #     if is_gathered(temp) and len(temp[0]) == 1:
-        #         temp = temp[0]
+        elif is_gathered(temp) and len(temp) == 1:
+            temp = temp[0]
 
         if self.sign is '-':
             temp = many_mul([], [-1], temp)
@@ -171,18 +200,38 @@ class Factor(Expr):
                 return [1, [self.sign, temp], 1]
 
         elif self.sign == 'log':
+            if temp not in in_eq:
+                in_eq.append(temp)
+
             if self.base == None:
                 if is_digit(temp[0]) and len(temp) == 1:
                     return [log(temp[0], e)]
                 else:
-                    return [1, ['log', temp, [e]], 1]
+                    if not is_gathered(temp) and len(temp) == 3:
+                        if [temp[0], temp[1], 1] == [e]:
+                            return [temp[2]]
+                        else:
+                            return [temp[2], ['log', [temp[0], temp[1], 1], [e]], 1]
+                    else:
+                        return [1, ['log', temp, [e]], 1]
             else:
                 base = self.base.eval() if isinstance(self.base, Expr) else self.base
+
+                if base not in in_eq:
+                    in_eq.append(base)
+                if base not in eq:
+                    eq.append(base)
 
                 if is_digit(temp[0]) and len(temp) == 1 and is_digit(base[0]) and len(base) == 1:
                     return [log(temp[0], base[0])]
                 else:
-                    return [1, ['log', temp, base], 1]
+                    if not is_gathered(temp) and len(temp) == 3:
+                        if [temp[0], temp[1], 1] == base:
+                            return [temp[2]]
+                        else:
+                            return [temp[2], ['log', [temp[0], temp[1], 1], base], 1]
+                    else:
+                        return [1, ['log', temp, base], 1]
         
         return temp
 
@@ -205,7 +254,7 @@ class TokenList(object):
     def takeIt(self, tokenType = None):
         funcs_list = ['log', 'sin', 'cos', 'tan']
 
-        if tokenType is None or self.isType(tokenType) or tokenType in funcs_list or self.tokens[self.n] in ['x', 'y', 'e', 'pi', ',']:
+        if tokenType is None or self.isType(tokenType) or tokenType in funcs_list or self.tokens[self.n] in ['e', 'pi', ','] or self.tokens[self.n] in var_list:
             token = self.shift()
             return token
         else:
@@ -252,6 +301,9 @@ def takeSequenceTail(tokens):
         sequenceTail = takeSequenceTail(tokens)
         return SequenceTail(op, factor, sequenceTail)
 
+    elif tokens.isType('('):
+        raise Exception("Unexpected token: %s" % (tokens.getItem()))
+
 def takeFactor(tokens):
     funcs_list = ['sin', 'cos', 'tan']
 
@@ -293,5 +345,10 @@ def takeFactor(tokens):
         return Factor(num)
 
 
-def Parser(tokens):
+def Parser(tokens, v_l):
+    global var_list, eq, in_eq
+    var_list = v_l
+    eq = []
+    in_eq = []
+    
     return takeExpr(TokenList(tokens))

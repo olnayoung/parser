@@ -1,20 +1,37 @@
 from initialize import tokenize
 from parsing import Parser
 from extra_funcs import from_list_to_str
+from extra_funcs import in_eq_domain
+from extra_funcs import eq_domain
 
 
 ### main function
 def calcul(eq):
 
+    var_list = []
+    temp = input()
+    temp = temp.split(',')
+
     try:
+        if temp[0] != '':
+            for n in range(len(temp)):
+                var = temp[n].split(' ')
+                if var[-1] in ['e', 'pi']:
+                    raise Exception("%s is not available" % (var[-1]))
+                var_list.append(var[-1])
+
         print('f =', eq)
-        eq_list = tokenize(eq)
+        eq_list = tokenize(eq, var_list)
         print('tokens:', eq_list)
 
-        E = Parser(eq_list)
+        E = Parser(eq_list, var_list)
         print('tree: ', str(E))
         ans = E.eval()
         print(ans)
+        eq, in_eq = E.get_domain()
+        print(eq, in_eq)
+
+        print('domain:', in_eq_domain(in_eq, var_list), 'except', eq_domain(eq, var_list))
 
         return from_list_to_str('', ans)
 

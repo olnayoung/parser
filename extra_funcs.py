@@ -1,4 +1,5 @@
 from math import log, sin, cos, tan, pi, e
+from sympy import Symbol, solve
 
 # def is_digit(num):
 #     return num.__class__ in [float, int]
@@ -143,6 +144,9 @@ def many_mul(ans, left, sequence):
 
 def multiply(left, sequence):
     ans = []
+    
+    if left[0] * sequence[0] == 0:
+        return [0]
     ans.append(left[0] * sequence[0])
 
     for n in range(1, len(left)):
@@ -203,6 +207,10 @@ def many_div(ans, left, sequence):
 
 def divide(left, sequence):
     ans = []
+
+    if left[0] == 0:
+        return [0]
+
     ans.append(left[0] / sequence[0])
 
     for n in range(1, len(left)):
@@ -344,6 +352,7 @@ def list_2_str(output, input):
 
             if input[idx+1] != 1 and input[idx+1] != 0:
                 output += '^'
+
                 if isinstance(input[idx+1], list):
                     output += '('
                     output = from_list_to_str(output, input[idx+1])
@@ -352,3 +361,36 @@ def list_2_str(output, input):
                     output += str(input[idx+1])
 
     return output
+
+
+def eq_domain(eq, var_list):
+    domain = []
+
+    # for n in range(len(var_list)):
+    #     var_list[n] = Symbol(var_list[n])
+
+    for n in range(len(eq)):
+        st = from_list_to_str('', eq[n])
+        ans = solve(st, var_list)
+
+        for m in range(len(ans)):
+            domain.append(ans[m])
+
+    return domain
+
+def in_eq_domain(in_eq, var_list):
+    string = []
+
+    # for n in range(len(var_list)):
+    #     var_list[n] = Symbol(var_list[n])
+
+    for n in range(len(in_eq)):
+        st = from_list_to_str('', in_eq[n])
+        string.append(st+'>0')
+    
+    domain = solve(string, var_list)
+
+        # for m in range(len(ans.args)):
+        #     domain.append(ans.args[m])
+            
+    return domain
