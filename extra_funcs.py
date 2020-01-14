@@ -1,3 +1,5 @@
+from math import log, sin, cos, tan, pi, e
+
 # def is_digit(num):
 #     return num.__class__ in [float, int]
 
@@ -22,6 +24,8 @@ def is_gathered(left):
 
 
 def plus(left, sequence):
+    delete = []
+
     if not is_gathered(left):
         left = [left]
 
@@ -31,6 +35,11 @@ def plus(left, sequence):
             if sequence[1:] == left[m][1:]:
                 left[m][0] += sequence[0]
                 check = 1
+
+                if left[m][0] == 0:
+                    delete.append(m)
+
+                continue
         
         if not check:
             left.append(sequence)
@@ -42,14 +51,28 @@ def plus(left, sequence):
                 if sequence[n][1:] == left[m][1:]:
                     left[m][0] += sequence[n][0]
                     check = 1
+
+                    if left[m][0] == 0:
+                        delete.append(m)
+                    
+                    continue
             
             if not check:
                 left.append(sequence[n])
+
+    while delete:
+        t = delete.pop()
+        del left[t]
+
+    if not left:
+        left.append([0])
 
     return left
 
 
 def minus(left, sequence):
+    delete = []
+
     if not is_gathered(left):
         left = [left]
 
@@ -59,6 +82,11 @@ def minus(left, sequence):
             if sequence[1:] == left[m][1:]:
                 left[m][0] -= sequence[0]
                 check = 1
+
+                if left[m][0] == 0:
+                    delete.append(m)
+                
+                continue
         
         if not check:
             sequence[0] *= -1
@@ -71,10 +99,22 @@ def minus(left, sequence):
                 if sequence[n][1:] == left[m][1:]:
                     left[m][0] -= sequence[n][0]
                     check = 1
+
+                    if left[m][0] == 0:
+                        delete.append(m)
+                    
+                    continue
             
             if not check:
                 sequence[0] *= -1
                 left.append(sequence[n])
+
+    while delete:
+        t = delete.pop()
+        del left[t]
+
+    if not left:
+        left.append([0])
 
     return left
 
@@ -122,6 +162,11 @@ def multiply(left, sequence):
                 ans[a_idx+1] = plus([ans[a_idx+1]], sequence[s_idx+1])
             else:
                 ans[a_idx+1] = plus(ans[a_idx+1], sequence[s_idx+1])
+            
+            if ans[a_idx+1] == 0:
+                del ans[a_idx]
+                del ans[a_idx]
+
         else:
             ans.append(sequence[s_idx])
             ans.append(sequence[s_idx+1])
@@ -177,6 +222,11 @@ def divide(left, sequence):
                 ans[a_idx+1] = minus([ans[a_idx+1]], sequence[s_idx+1])
             else:
                 ans[a_idx+1] = minus(ans[a_idx+1], sequence[s_idx+1])
+            
+            if ans[a_idx+1] == 0:
+                del ans[a_idx]
+                del ans[a_idx]
+
         else:
             ans.append(sequence[s_idx])
             ans.append(sequence[s_idx+1] * -1)

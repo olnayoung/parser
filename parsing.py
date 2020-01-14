@@ -133,7 +133,7 @@ class SequenceTail(object):
         if self.sequenceTail is None:
             return left
         else:
-            self.sequenceTail.calc(left)
+            return self.sequenceTail.calc(left)
 
     def __repr__(self):
         return "SequenceTail(%s, %s, %s)" %(self.op, self.factor, self.sequenceTail)
@@ -142,7 +142,7 @@ class Factor(Expr):
     def __init__(self, expr, sign = None, base = None):
         self.expr = expr
         self.sign = sign
-        self.funcs = {'sin': sin, 'cos': cos, 'tan': tan}
+        self.funcs = {'sin': sin, 'cos': cos, 'tan': tan, 'e': e, 'pi': pi}
         self.funcs_list = ['sin', 'cos', 'tan']
         self.base = base
 
@@ -152,9 +152,11 @@ class Factor(Expr):
             temp = [1, temp, 1]
         elif is_digit(temp):
             temp = [temp]
-        else:
-            if is_gathered(temp) and len(temp[0]) == 1:
-                temp = temp[0]
+        elif temp in ['e', 'pi']:
+            temp = [self.funcs[temp]]
+        # else:
+        #     if is_gathered(temp) and len(temp[0]) == 1:
+        #         temp = temp[0]
 
         if self.sign is '-':
             temp = many_mul([], [-1], temp)
