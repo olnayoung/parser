@@ -245,6 +245,8 @@ def divide(left, sequence):
 def power(left, sequence):
     ans = []
     if is_gathered(left):
+        if not is_gathered(sequence) and len(sequence) == 1:
+            sequence = sequence[0]
         ans.append([1, left, sequence])
     else:
         if len(left) == 1:
@@ -397,17 +399,23 @@ def in_eq_domain(in_eq, var_list):
 
 
 def diff(input, var):
+    funcs_list = ['sin', 'cos', 'tan']
     output = []
 
     if is_gathered(input):
         for t in range(len(input)):
             temp = diff(input[t], var)
 
+            # if not output:
+            #     output = [[0]]
+
             if temp != [0]:
-                output.append(temp[0])
+                if is_gathered(temp) and len(temp) == 1:
+                    temp = temp[0]
+                output.append(temp)
+                # output = plus(output, temp)
 
     else:            
-        check = 0
         for n in range(int(len(input)/2)):
 
             input_rep = []
@@ -415,40 +423,70 @@ def diff(input, var):
                 input_rep.append(input[m])
 
             idx = 2*n + 1
+
             if input[idx] == var:
-                i_idx = input_rep.index(var)
+                input_rep[0] *= input[idx+1]    
+                input_rep[idx+1] -= 1
 
-                check = 1
-
-                input_rep[0] *= input[idx+1]
-                input_rep[i_idx+1] -= 1
-
-                if input_rep[i_idx+1] == 0:
-                    del input_rep[i_idx]
-                    del input_rep[i_idx]
+                if input_rep[idx+1] == 0:
+                    del input_rep[idx]
+                    del input_rep[idx]
 
                 output.append(input_rep)
 
-            elif isinstance(input[idx], list):
-                temp = diff(input[idx], var)
+            elif isinstance(input[idx], list) and len(input[idx]) > 1:
+                if input[idx][0] in funcs_list:
+                    if input_rep[idx][0] == 'sin':
+                        input_rep[idx][0] = 'cos'
+                    # elif input_rep[idx][0] == 'cos':
+                    #     input_rep[idx][0] = 'sin'
+                    #     input_rep[0] *= -1
+                    # else:
+                    #     input_rep[idx][0] = 'cos'
+                    #     input_rep[idx+1] 
 
-                if temp == [0]:
-                    del input_rep[idx]
-                    del input_rep[idx]
+                    temp = diff(input[idx][1], var)
+                    if is_gathered(temp) and len(temp) == 1:
+                        temp = temp[0]
+                    
+                    if temp == [0]:
+                        continue
+                    elif temp != [1]:
+                        input_rep.append(temp)
+                        input_rep.append(1)
+                    
+                    output.append(input_rep)
 
                 else:
-                    input_rep[0] *= input_rep[idx+1]
-                    input_rep[idx+1] -= 1
+                    temp = diff(input[idx], var)
 
-                    if input_rep[idx+1] == 0:
-                        del input_rep[idx]
-                        del input_rep[idx]
+                    if is_gathered(temp) and len(temp) == 1:
+                        temp = temp[0]
 
-                    input_rep.append(temp)
+                    if temp == [0]:
+                        # del input_rep[idx]
+                        # del input_rep[idx]
+                        continue
 
-                output.append(input_rep)
+                    else:
+                        input_rep[0] *= input_rep[idx+1]
+                        input_rep[idx+1] -= 1
 
-        if not check:
-            return [0]
+                        if input_rep[idx+1] == 0:
+                            del input_rep[idx]
+                            del input_rep[idx]
+
+                        if temp != [1]:
+                            input_rep.append(temp)
+                            input_rep.append(1)
+
+                    if input_rep != [0]:
+                        output.append(input_rep)
+            
+            elif isinstance(input[idx+1], list):
+                input_rep
+
+    if not output:
+        output = [0]
 
     return output

@@ -167,6 +167,9 @@ class SequenceTail(object):
                 left = many_mul([], left, left)
             else:
                 left = power(left, factor)
+
+            if is_gathered(left) and len(left) == 1:
+                left = left[0]
         
         if self.sequenceTail is None:
             return left

@@ -3,6 +3,7 @@ from parsing import Parser
 from extra_funcs import from_list_to_str
 from extra_funcs import in_eq_domain
 from extra_funcs import eq_domain
+from extra_funcs import diff
 
 
 ### main function
@@ -28,10 +29,15 @@ def calcul(eq):
         print('tree: ', str(E))
         ans = E.eval()
         print(ans)
+
         eq, in_eq = E.get_domain()
         print(eq, in_eq)
 
         print('domain:', in_eq_domain(in_eq, var_list), 'except', eq_domain(eq, var_list))
+
+        for n in range(len(var_list)):
+            eq_diff = diff(ans, var_list[n])
+            print('Differentiated by', var_list[n], ':', from_list_to_str('', eq_diff))
 
         return from_list_to_str('', ans)
 
@@ -40,33 +46,37 @@ def calcul(eq):
         return 'Error'
 
 
-def change_x_to_num(eq, xn = None, yn = None):
+def change_x_to_num(eq, var_list, string):
     try:
         print('f =', eq)
-        eq_list = tokenize(eq)
+        eq_list = tokenize(eq, var_list)
         print('tokens:', eq_list)
 
-        if xn is not None:
-            x_applied = []
-            for n in range(len(eq_list)):
-                if eq_list[n] == 'x':
-                    x_applied.append(xn)
+        variable = []
+        value = []
+        string = string.split(',')
+
+        for n in range(len(string)):
+            temp = string[n].split('=')
+            vari = temp[0].split(' ')
+            val = temp[1].split(' ')
+            for m in range(len(vari)):
+                if vari[m] != '':
+                    variable.append(vari[m])
+            value.append(val[-1])
+
+        for n in range(len(variable)):
+            eq_temp = []
+
+            for m in range(len(eq_list)):
+                if eq_list[m] == variable[n]:
+                    eq_temp.append(float(value[n]))
                 else:
-                    x_applied.append(eq_list[n])
+                    eq_temp.append(eq_list[m])
 
-            eq_list = x_applied
+            eq_list = eq_temp
 
-        if yn is not None:
-            y_applied = []
-            for n in range(len(eq_list)):
-                if eq_list[n] == 'y':
-                    y_applied.append(yn)
-                else:
-                    y_applied.append(eq_list[n])
-
-            eq_list = y_applied
-
-        E = Parser(eq_list)
+        E = Parser(eq_list, var_list)
         print('tree: ', str(E))
         print('ans:', E.eval())
 
