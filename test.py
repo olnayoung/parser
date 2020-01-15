@@ -15,7 +15,7 @@ from extra_funcs import in_eq_domain
 from extra_funcs import eq_domain
 from extra_funcs import diff
 
-print(calcul('y^x'))
+print(calcul('x^2^(y+20)/x+1'))
 
 # n = 0
 # correct = 0

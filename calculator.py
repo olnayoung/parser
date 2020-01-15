@@ -30,10 +30,7 @@ def calcul(eq):
         E = Parser(eq_list, var_list)
         print('tree: ', str(E))
         ans = E.eval()
-        print(ans)
-
         eq, in_eq = E.get_domain()
-        print(eq, in_eq)
 
         print('domain:', in_eq_domain(in_eq, var_list), 'except', eq_domain(eq, var_list))
 

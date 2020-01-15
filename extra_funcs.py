@@ -70,7 +70,6 @@ def plus(left, sequence):
 
     return left
 
-
 def minus(left, sequence):
     delete = []
 
@@ -428,13 +427,16 @@ def diff(input, var):
                 if is_digit(input[idx+1]):
                     input_rep[0] *= input[idx+1]    
                     input_rep[idx+1] -= 1
-                else:
-                    input_rep = many_mul([], input_rep, input[idx+1])
-                    input_rep[idx+1] = minus(input_rep[idx+1], [1])
 
-                if input_rep[idx+1] == 0 or input_rep[idx+1] == [0]:
-                    del input_rep[idx]
-                    del input_rep[idx]
+                    if input_rep[idx+1] == 0:
+                        del input_rep[idx]
+                        del input_rep[idx]
+
+                else:
+                    input_rep[idx+1] = minus(input_rep[idx+1], [1])
+                    input_rep = many_mul([], input_rep, input[idx+1])
+                    # for m in range(len(input[idx+1])):
+                    #     input_rep.append(input[idx+1][m])
 
                 output.append(input_rep)
 
