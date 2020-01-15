@@ -343,9 +343,12 @@ def list_2_str(output, input):
             idx = 2*m + 1
 
             if isinstance(input[idx], list):
-                output += '('
-                output = from_list_to_str(output, input[idx])
-                output += ')'
+                if len(input[idx]) == 1:
+                    output += str(input[idx][0])
+                else:
+                    output += '('
+                    output = from_list_to_str(output, input[idx])
+                    output += ')'
             else:
                 if input[idx+1] != 0:
                     output += str(input[idx])
@@ -418,17 +421,18 @@ def diff(input, var):
     else:            
         for n in range(int(len(input)/2)):
 
-            input_rep = []
-            for m in range(len(input)):
-                input_rep.append(input[m])
-
+            input_rep = input[:]
             idx = 2*n + 1
 
             if input[idx] == var:
-                input_rep[0] *= input[idx+1]    
-                input_rep[idx+1] -= 1
+                if is_digit(input[idx+1]):
+                    input_rep[0] *= input[idx+1]    
+                    input_rep[idx+1] -= 1
+                else:
+                    input_rep = many_mul([], input_rep, input[idx+1])
+                    input_rep[idx+1] = minus(input_rep[idx+1], [1])
 
-                if input_rep[idx+1] == 0:
+                if input_rep[idx+1] == 0 or input_rep[idx+1] == [0]:
                     del input_rep[idx]
                     del input_rep[idx]
 
@@ -436,26 +440,42 @@ def diff(input, var):
 
             elif isinstance(input[idx], list) and len(input[idx]) > 1:
                 if input[idx][0] in funcs_list:
-                    if input_rep[idx][0] == 'sin':
-                        input_rep[idx][0] = 'cos'
-                    # elif input_rep[idx][0] == 'cos':
-                    #     input_rep[idx][0] = 'sin'
-                    #     input_rep[0] *= -1
-                    # else:
-                    #     input_rep[idx][0] = 'cos'
-                    #     input_rep[idx+1] 
+                    if input[idx+1] == 1:
+                        if input[idx][0] == 'sin':
+                            input_rep = [input[0], ['cos', input[idx][1]], 1]
+                        elif input[idx][0] == 'cos':
+                            input_rep = [-input[0], ['sin', input[idx][1]], 1]
+                        else:
+                            input_rep = [input[0], ['cos', input[idx][1]], -2]
 
-                    temp = diff(input[idx][1], var)
-                    if is_gathered(temp) and len(temp) == 1:
-                        temp = temp[0]
+                        temp = diff(input[idx][1], var)
+                        if is_gathered(temp) and len(temp) == 1:
+                            temp = temp[0]
+                        
+                        if temp == [0]:
+                            continue
+                        elif temp != [1]:
+                            input_rep.append(temp)
+                            input_rep.append(1)
+                        
+                        output.append(input_rep)
                     
-                    if temp == [0]:
-                        continue
-                    elif temp != [1]:
-                        input_rep.append(temp)
-                        input_rep.append(1)
-                    
-                    output.append(input_rep)
+                    else:
+                        input_rep[0] *= input_rep[idx+1]
+                        input_rep[idx+1] -= 1
+
+                        temp = diff([1, input_rep[idx], 1], var)
+
+                        if is_gathered(temp) and len(temp) == 1:
+                            temp = temp[0]
+
+                        if temp[0] == [0]:
+                            continue
+
+                        for m in range(1, len(temp)):
+                            input_rep.append(temp[m])
+
+                        output.append(input_rep)
 
                 else:
                     temp = diff(input[idx], var)
@@ -484,7 +504,25 @@ def diff(input, var):
                         output.append(input_rep)
             
             elif isinstance(input[idx+1], list):
-                input_rep
+                if input[idx] != [e]:
+                    if len(input[idx]) == 1 and is_digit(input[idx][0]):
+                        input_rep[0] *= log(input[idx][0], e)
+                    else:
+                        input_rep.append(['log', input[idx], [e]])
+                        input_rep.append(1)
+                
+                temp = diff(input[idx+1], var)
+
+                if is_gathered(temp) and len(temp) == 1:
+                    temp = temp[0]
+                
+                if temp == [0]:
+                    continue
+
+                for m in range(1, len(temp)):
+                    input_rep.append(temp[m])
+
+                output.append(input_rep)
 
     if not output:
         output = [0]

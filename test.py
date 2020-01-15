@@ -15,7 +15,7 @@ from extra_funcs import in_eq_domain
 from extra_funcs import eq_domain
 from extra_funcs import diff
 
-print(calcul('(sin(x))^2'))
+print(calcul('y^x'))
 
 # n = 0
 # correct = 0

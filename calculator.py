@@ -9,17 +9,19 @@ from extra_funcs import diff
 ### main function
 def calcul(eq):
 
-    var_list = []
-    temp = input()
-    temp = temp.split(',')
+    # var_list = []
+    # temp = input()
+    # temp = temp.split(',')
 
     try:
-        if temp[0] != '':
-            for n in range(len(temp)):
-                var = temp[n].split(' ')
-                if var[-1] in ['e', 'pi']:
-                    raise Exception("%s is not available" % (var[-1]))
-                var_list.append(var[-1])
+        # if temp[0] != '':
+        #     for n in range(len(temp)):
+        #         var = temp[n].split(' ')
+        #         if var[-1] in ['e', 'pi']:
+        #             raise Exception("%s is not available" % (var[-1]))
+        #         var_list.append(var[-1])
+
+        var_list = ['x', 'y']
 
         print('f =', eq)
         eq_list = tokenize(eq, var_list)
