@@ -1,7 +1,7 @@
 import sys
 from PyQt5.QtWidgets import *
 # from PyQt5.QtGui import QIcon
-# from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtCore import *
 from calculator import calcul
 from calculator import change_x_to_num
 
@@ -50,8 +50,10 @@ class App(QMainWindow):
         self.d_label.resize(self.width, 30)
 
         self.da_label = QLabel(self)
-        self.da_label.move(50, 240)
+        self.da_label.move(50, 260)
         self.da_label.resize(self.width, 100)
+        self.da_label.setAlignment(Qt.AlignTop)
+        # self.da_label.setAlignment(Qt.AlignHCenter)
         
         # Button for equation
         self.button = QPushButton('click', self)
