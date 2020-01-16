@@ -98,7 +98,7 @@ class App(QMainWindow):
                     return 0
                 self.var_list.append(var[-1])
 
-        ans, diff = calcul(self.eq, self.var_list)
+        ans, diff, domain, in_domain = calcul(self.eq, self.var_list)
 
         self.a_label.setText('Equation is: ' + ans)
         self.d_label.setText('Differential')

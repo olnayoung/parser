@@ -477,6 +477,51 @@ def diff(input, var):
 
                         output.append(input_rep)
 
+                elif input[idx][0] == 'log':
+                    if input_rep[idx+1] == 1:
+                        input_rep.append(input_rep[idx][1])
+                        input_rep.append(-1)
+
+                        temp = diff([1, input_rep[idx][1], 1], var)
+
+                        if is_gathered(temp) and len(temp) == 1:
+                            temp = temp[0]
+                        
+                        if temp == [0]:
+                            continue
+                        elif temp != [1]:
+                            input_rep.append(temp)
+                            input_rep.append(1)
+
+                        if len(input_rep[idx][2]) == 1 and is_digit(input_rep[idx][2][0]):
+                            input_rep[0] *= (log(input_rep[idx][2][0], e) ** -1)
+                            del input_rep[idx]
+                            del input_rep[idx]
+
+                        else:
+                            input_rep[idx+1] = -1
+                            input_rep[idx] = ['log', input_rep[idx][1], [e]]
+
+                        output.append(input_rep)
+                    
+                    else:
+                        input_rep[0] *= input_rep[idx+1]
+                        input_rep[idx+1] -= 1
+
+                        temp = diff([1, input_rep[idx], 1], var)
+
+                        if is_gathered(temp) and len(temp) == 1:
+                            temp = temp[0]
+
+                        input_rep[0] *= temp[0]
+                        if input_rep[0] == 0:
+                            continue
+
+                        for m in range(1, len(temp)):
+                            input_rep.append(temp[m])
+
+                        output.append(input_rep)
+
                 else:
                     temp = diff(input[idx], var)
 

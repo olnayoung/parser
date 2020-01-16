@@ -5,7 +5,6 @@ from extra_funcs import in_eq_domain
 from extra_funcs import eq_domain
 from extra_funcs import diff
 import matplotlib.pyplot as plt
-import numpy as np
 
 
 ### main function
@@ -35,25 +34,23 @@ def calcul(eq, var_list):
         E = Parser(eq_list, var_list)
         print('tree: ', str(E))
         ans = E.eval()
-        eq, in_eq = E.get_domain()
+        domain, in_domain = E.get_domain()
 
-        if not eq and not in_eq:
-            print('domain: -inf ~ inf')
-        elif not eq and in_eq:
-            print('domain:', in_eq_domain(in_eq, var_list))
-        elif eq and not in_eq:
-            print('domain: -inf ~ inf except', eq_domain(eq, var_list))
-        else:
-            print('domain:', in_eq_domain(in_eq, var_list), 'except', eq_domain(eq, var_list))
+        # if not domain and not in_domain:
+        #     print('domain: -inf ~ inf')
+        # elif not domain and in_domain:
+        #     print('domain:', in_eq_domain(in_domain, var_list))
+        # elif domain and not in_domain:
+        #     print('domain: -inf ~ inf except', eq_domain(domain, var_list))
+        # else:
+        #     print('domain:', in_eq_domain(in_domain, var_list), 'except', eq_domain(domain, var_list))
 
         eq_diff = []
         for n in range(len(var_list)):
             eq_diff.append(from_list_to_str('', diff(ans, var_list[n])))
-            # eq_diff = diff(ans, var_list[n])
-            # print('Differentiated by', var_list[n], ':', from_list_to_str('', eq_diff))
 
 
-        return [from_list_to_str('', ans), eq_diff]
+        return [from_list_to_str('', ans), eq_diff, domain, in_domain]
 
     except Exception as e:
         print('Error: ', e)
@@ -102,9 +99,18 @@ def change_x_to_num(eq, var_list, string):
         return 'Error'
 
 
-def plot_graph(eq, var_list):
+def plot_graph(eq, var_list, ran):
     var = var_list[0]
-    x = np.arange(-5, 5)
+
+    ipt = []
+    opt = []
+
+    for n in range(int((ran[1]-ran[0])/0.1)):
+        value = ran[0] + 0.1 * n
+        ans = change_x_to_num(eq, var_list, var + '=' + str(value))
+
+        ipt.append(value)
+        opt.append(float(ans))
 
     # eq_temp = []
     # for m in range(len(eq)):
@@ -113,7 +119,7 @@ def plot_graph(eq, var_list):
     #     else:
     #         eq_temp.append(eq[m])
         
-    plt.plot(x, 'x')
+    plt.plot(ipt, opt)
     plt.show()
     
     return 0

@@ -12,6 +12,8 @@ def tokenize(eq, var_list):
                 temp += str(eq[n])
                 eq_list.append(float(temp))
             elif eq[n] in var_list:
+                if temp != '0':
+                    eq_list.append(float(temp))
                 eq_list.append(eq[n])
             elif eq[n-1:n+1] == 'pi':
                 eq_list.pop()

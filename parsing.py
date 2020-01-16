@@ -103,11 +103,6 @@ class Term(Expr):
 
         return domain
 
-        # if self.termTail is None:
-        #     return left
-        # else:
-        #     return self.termTail.calc(left)
-
     def __repr__(self):
         return "Term(%s, %s)" % (self.sequence, self.termTail)
 
@@ -312,7 +307,7 @@ def takeSequenceTail(tokens):
         sequenceTail = takeSequenceTail(tokens)
         return SequenceTail(op, factor, sequenceTail)
 
-    elif tokens.isType('('):
+    elif tokens.isType('(') or tokens.getItem() in var_list or is_digit(tokens.getItem()):
         raise Exception("Unexpected token: %s" % (tokens.getItem()))
 
 def takeFactor(tokens):
