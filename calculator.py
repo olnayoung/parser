@@ -92,7 +92,10 @@ def change_x_to_num(eq, var_list, string):
 
         E = Parser(eq_list, var_list)
         print('tree: ', str(E))
-        print('ans:', E.eval())
+
+        ans = E.eval()
+        
+        return from_list_to_str('', ans)
 
     except Exception as e:
         print('Error: ', e)

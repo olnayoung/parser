@@ -16,8 +16,8 @@ from extra_funcs import in_eq_domain
 from extra_funcs import eq_domain
 from extra_funcs import diff
 
-# print(calcul('y^(-x*sin(x))'))
-plot_graph('x**2', ['x'])
+print(calcul('x+y+1', ['x', 'y']))
+# plot_graph('x**2', ['x'])
 
 # n = 0
 # correct = 0
