@@ -32,7 +32,14 @@ def calcul(eq):
         ans = E.eval()
         eq, in_eq = E.get_domain()
 
-        print('domain:', in_eq_domain(in_eq, var_list), 'except', eq_domain(eq, var_list))
+        if not eq and not in_eq:
+            print('domain: -inf ~ inf')
+        elif not eq and in_eq:
+            print('domain:', in_eq_domain(in_eq, var_list))
+        elif eq and not in_eq:
+            print('domain: -inf ~ inf except', eq_domain(eq, var_list))
+        else:
+            print('domain:', in_eq_domain(in_eq, var_list), 'except', eq_domain(eq, var_list))
 
         for n in range(len(var_list)):
             eq_diff = diff(ans, var_list[n])

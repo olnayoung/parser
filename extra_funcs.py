@@ -1,8 +1,6 @@
 from math import log, sin, cos, tan, pi, e
 from sympy import Symbol, solve
-
-# def is_digit(num):
-#     return num.__class__ in [float, int]
+from copy import deepcopy
 
 def is_digit(value):
   try:
@@ -210,10 +208,11 @@ def divide(left, sequence):
     if left[0] == 0:
         return [0]
 
-    ans.append(left[0] / sequence[0])
+    ans = deepcopy(left)
+    ans[0] /= sequence[0]
 
-    for n in range(1, len(left)):
-        ans.append(left[n])
+    # for n in range(1, len(left)):
+    #     ans.append(left[n])
 
     for n in range(int(len(sequence)/2)):
         s_idx = 2*n+1
@@ -344,6 +343,8 @@ def list_2_str(output, input):
             if isinstance(input[idx], list):
                 if len(input[idx]) == 1:
                     output += str(input[idx][0])
+                elif input[idx][0] in funcs_list:
+                    output = from_list_to_str(output, input[idx])
                 else:
                     output += '('
                     output = from_list_to_str(output, input[idx])
@@ -408,19 +409,15 @@ def diff(input, var):
         for t in range(len(input)):
             temp = diff(input[t], var)
 
-            # if not output:
-            #     output = [[0]]
-
             if temp != [0]:
                 if is_gathered(temp) and len(temp) == 1:
                     temp = temp[0]
                 output.append(temp)
-                # output = plus(output, temp)
 
     else:            
         for n in range(int(len(input)/2)):
 
-            input_rep = input[:]
+            input_rep = deepcopy(input)
             idx = 2*n + 1
 
             if input[idx] == var:
@@ -433,10 +430,8 @@ def diff(input, var):
                         del input_rep[idx]
 
                 else:
-                    input_rep[idx+1] = minus(input_rep[idx+1], [1])
+                    input_rep[idx+1] = minus(deepcopy(input_rep[idx+1]), [1])
                     input_rep = many_mul([], input_rep, input[idx+1])
-                    # for m in range(len(input[idx+1])):
-                    #     input_rep.append(input[idx+1][m])
 
                 output.append(input_rep)
 
@@ -444,11 +439,13 @@ def diff(input, var):
                 if input[idx][0] in funcs_list:
                     if input[idx+1] == 1:
                         if input[idx][0] == 'sin':
-                            input_rep = [input[0], ['cos', input[idx][1]], 1]
+                            input_rep[idx][0] = 'cos'
                         elif input[idx][0] == 'cos':
-                            input_rep = [-input[0], ['sin', input[idx][1]], 1]
+                            input_rep[idx][0] = 'sin'
+                            input_rep[0] *= -1
                         else:
-                            input_rep = [input[0], ['cos', input[idx][1]], -2]
+                            input_rep[idx][0] = 'cos'
+                            input_rep[idx+1] = -2
 
                         temp = diff(input[idx][1], var)
                         if is_gathered(temp) and len(temp) == 1:
@@ -471,7 +468,8 @@ def diff(input, var):
                         if is_gathered(temp) and len(temp) == 1:
                             temp = temp[0]
 
-                        if temp[0] == [0]:
+                        input_rep[0] *= temp[0]
+                        if input_rep[0] == 0:
                             continue
 
                         for m in range(1, len(temp)):
@@ -486,8 +484,6 @@ def diff(input, var):
                         temp = temp[0]
 
                     if temp == [0]:
-                        # del input_rep[idx]
-                        # del input_rep[idx]
                         continue
 
                     else:
@@ -521,8 +517,9 @@ def diff(input, var):
                 if temp == [0]:
                     continue
 
-                for m in range(1, len(temp)):
-                    input_rep.append(temp[m])
+                # for m in range(1, len(temp)):
+                input_rep.append(temp)
+                input_rep.append(1)
 
                 output.append(input_rep)
 
