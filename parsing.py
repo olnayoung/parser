@@ -175,12 +175,13 @@ class SequenceTail(object):
         return "SequenceTail(%s, %s, %s)" %(self.op, self.factor, self.sequenceTail)
 
 class Factor(Expr):
-    def __init__(self, expr, sign = None, base = None):
+    def __init__(self, expr, sign = None, base = None, k = None):
         self.expr = expr
         self.sign = sign
         self.funcs = {'sin': sin, 'cos': cos, 'tan': tan, 'e': e, 'pi': pi}
         self.funcs_list = ['sin', 'cos', 'tan']
         self.base = base
+        self.k = k
 
     def eval(self):
         temp = self.expr.eval() if isinstance(self.expr, Expr) else self.expr
@@ -210,16 +211,20 @@ class Factor(Expr):
                 in_eq.append(temp)
 
             if self.base == None:
-                if is_digit(temp[0]) and len(temp) == 1:
-                    return [log(temp[0], e)]
-                else:
-                    if not is_gathered(temp) and len(temp) == 3:
-                        if [temp[0], temp[1], 1] == [e]:
-                            return [temp[2]]
-                        else:
-                            return [temp[2], ['log', [temp[0], temp[1], 1], [e]], 1]
-                    else:
-                        return [1, ['log', temp, [e]], 1]
+                base = [1, [e], 1]
+                # if is_digit(temp[0]) and len(temp) == 1:
+                #     return [log(temp[0], e)]
+                # else:
+                #     if not is_gathered(temp) and len(temp) == 3:
+                #         if is_digit(temp[2][0]) and len(temp[2]) == 1:
+                #             if [temp[0], temp[1]] == [1,[e]]:
+                #                 return [temp[2]]
+                #             else:
+                #                 return [temp[2], ['log', [temp[0], temp[1], 1], [e]], 1]
+                #         # else:
+
+                #     else:
+                #         return [1, ['log', temp, [e]], 1]
             else:
                 base = self.base.eval() if isinstance(self.base, Expr) else self.base
 
@@ -228,16 +233,27 @@ class Factor(Expr):
                 if base not in eq:
                     eq.append(base)
 
-                if is_digit(temp[0]) and len(temp) == 1 and is_digit(base[0]) and len(base) == 1:
-                    return [log(temp[0], base[0])]
-                else:
-                    if not is_gathered(temp) and len(temp) == 3:
-                        if [temp[0], temp[1], 1] == base:
-                            return [temp[2]]
-                        else:
-                            return [temp[2], ['log', [temp[0], temp[1], 1], base], 1]
+            if is_digit(temp[0]) and len(temp) == 1 and is_digit(base[0]) and len(base) == 1:
+                return [log(temp[0], base[0])]
+            else:
+                if not is_gathered(temp) and len(temp) == 3:
+                    if [temp[0], temp[1], 1] == base:
+                        # return [temp[2]]
+                        return many_mul([], [1], temp[2])
                     else:
-                        return [1, ['log', temp, base], 1]
+                        # return [temp[2], ['log', [temp[0], temp[1], 1], base], 1]
+                        return many_mul([], [1, ['log', [temp[0], temp[1], 1], base], 1], [temp[2]])
+                else:
+                    return [1, ['log', temp, base], 1]
+        
+        elif self.sign == 'sig':
+            var_list.append(self.k)
+            temp = self.expr.eval() if isinstance(self.expr, Expr) else self.expr
+            var_list.pop()
+            # sigma(self.k, temp, self.base[0], self.base[1], var_list)
+
+            return [0, 'sig']
+
         
         return temp
 
@@ -331,6 +347,23 @@ def takeFactor(tokens):
         expr = takeExpr(tokens)
         tokens.takeIt(')')
         return Factor(expr, func)
+    
+    elif tokens.getItem() == 'sig':
+        func = tokens.getItem()
+        tokens.takeIt(func)
+        tokens.takeIt('(')
+        k = tokens.getItem()
+        var_list.append(k)
+        tokens.shift()
+        tokens.takeIt(',')
+        expr = takeExpr(tokens)
+        var_list.pop()
+        tokens.takeIt(',')
+        start = tokens.takeIt(NUMBER)
+        tokens.takeIt(',')
+        end = tokens.takeIt(NUMBER)
+        tokens.takeIt(')')
+        return Factor(expr, 'sig', [start, end], k)
 
     elif tokens.getItem() == 'log':
         func = tokens.getItem()
