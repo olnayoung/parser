@@ -371,32 +371,26 @@ def list_2_str(output, input):
 def eq_domain(eq, var_list):
     domain = []
 
-    # for n in range(len(var_list)):
-    #     var_list[n] = Symbol(var_list[n])
-
     for n in range(len(eq)):
         st = from_list_to_str('', eq[n])
-        ans = solve(st, var_list)
+        # ans = solve(st, var_list)
 
-        for m in range(len(ans)):
-            domain.append(ans[m])
+        # for m in range(len(ans)):
+        #     domain.append(ans[m])
+
+        domain.append(st)
 
     return domain
 
 def in_eq_domain(in_eq, var_list):
-    string = []
-
-    # for n in range(len(var_list)):
-    #     var_list[n] = Symbol(var_list[n])
+    domain = []
 
     for n in range(len(in_eq)):
         st = from_list_to_str('', in_eq[n])
-        string.append(st+'>0')
+        # string.append(st+'>0')
+        domain.append(st)
     
-    domain = solve(string, var_list)
-
-        # for m in range(len(ans.args)):
-        #     domain.append(ans.args[m])
+    # domain = solve(string, var_list)
             
     return domain
 

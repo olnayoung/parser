@@ -108,7 +108,7 @@ class App(QMainWindow):
                 self.var_list.append(temp[n])
 
         ans, diff, domain, in_domain = calcul(self.eq, self.var_list)
-        print(ans)
+        # print(ans)
 
         self.a_label.setText('Equation is: ' + ans)
         self.d_label.setText('Differential')
@@ -116,14 +116,14 @@ class App(QMainWindow):
         diff_ans = ''
         for n in range(len(diff)):
             diff_ans = diff_ans + 'Differentiated by ' + self.var_list[n] + ': ' + diff[n] + '\n'
-            print(diff[n])
+            # print(diff[n])
 
         self.da_label.setText(diff_ans)
 
-        # if len(self.var_list) == 1 and self.eq[0:3] != 'sig':
-        #     name = plot_graph(ans, self.var_list, [0, 5])
-        #     pixmap = QPixmap(name).scaled(self.im_width, self.im_height)
-        #     self.im_label.setPixmap(pixmap)
+        if len(self.var_list) == 1 and self.eq[0:3] != 'sig':
+            name = plot_graph(ans, domain, in_domain, self.var_list, [-50, 50])
+            pixmap = QPixmap(name).scaled(self.im_width, self.im_height)
+            self.im_label.setPixmap(pixmap)
 
         return 0
 

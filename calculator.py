@@ -88,26 +88,50 @@ def change_x_to_num(eq, var_list, string):
         return 'Error'
 
 
-def plot_graph(eq, var_list, ran):
+def plot_graph(eq, domain, in_domain, var_list, ran):
     var = var_list[0]
 
     ipt = []
     opt = []
+    plt.clf()
 
     for n in range(int((ran[1]-ran[0])/0.1)):
         value = ran[0] + 0.1 * n
-        ans = change_x_to_num(eq, var_list, var + '=' + str(value))
+        
+        if check_domain(domain, in_domain, var_list, var+'='+str(value)):
+            ans = change_x_to_num(eq, var_list, var + '=' + str(value))
 
-        ipt.append(value)
-        opt.append(float(ans))
-    
-    plt.clf()
-    plt.plot(ipt, opt)
+            ipt.append(value)
+            opt.append(float(ans))
+        else:
+            plt.plot(ipt, opt, 'b')
+            ipt = []
+            opt = []
+
+
+    plt.plot(ipt, opt, 'b')
     name = 'graph.png'
     plt.savefig(name)
-    # plt.show()
     
     return name
+
+
+def differentiable(eq, eq_diff, string):
+    try:
+        variable = []
+        value = []
+        string = string.replace(" ", "")
+        string = string.split(',')
+
+        for n in range(len(string)):
+            temp = string[n].split('=')
+            variable.append(temp[0])
+            value.append(temp[1])
+
+    except Exception as e:
+        print('Error: ', e)
+        return 'Error'
+    return 0
 
 
 def sigma(k, equation, start, end, var_list = None):
@@ -125,10 +149,6 @@ def sigma(k, equation, start, end, var_list = None):
         eq, a, b, c = calcul(equation, ap_var_list)
         ans = 'sig(' + k + ', ' + eq + ', ' + str(start) + ', ' + str(end) + ')'
 
-
-        # E = Parser(eq_list, var_list)
-        # ans = E.eval()
-
         eq_diff = []
 
         for n in range(len(var_list)):
@@ -145,3 +165,18 @@ def sigma(k, equation, start, end, var_list = None):
             ans += float(change_x_to_num(eq, [k], string))
 
     return [ans, 0, 0, 0]
+
+
+def check_domain(domain, in_domain, var_list, input):
+    domain = eq_domain(domain, var_list)
+    in_domain = in_eq_domain(in_domain, var_list)
+
+    for n in range(len(domain)):
+        if float(change_x_to_num(domain[n], var_list, input)) == 0:
+            return 0
+    
+    for n in range(len(in_domain)):
+        if float(change_x_to_num(in_domain[n], var_list, input)) <= 0:
+            return 0
+
+    return 1

@@ -212,19 +212,6 @@ class Factor(Expr):
 
             if self.base == None:
                 base = [1, [e], 1]
-                # if is_digit(temp[0]) and len(temp) == 1:
-                #     return [log(temp[0], e)]
-                # else:
-                #     if not is_gathered(temp) and len(temp) == 3:
-                #         if is_digit(temp[2][0]) and len(temp[2]) == 1:
-                #             if [temp[0], temp[1]] == [1,[e]]:
-                #                 return [temp[2]]
-                #             else:
-                #                 return [temp[2], ['log', [temp[0], temp[1], 1], [e]], 1]
-                #         # else:
-
-                #     else:
-                #         return [1, ['log', temp, [e]], 1]
             else:
                 base = self.base.eval() if isinstance(self.base, Expr) else self.base
 
