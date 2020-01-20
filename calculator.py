@@ -5,6 +5,7 @@ from extra_funcs import in_eq_domain
 from extra_funcs import eq_domain
 from extra_funcs import diff
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 
 ### main function
@@ -88,15 +89,15 @@ def change_x_to_num(eq, var_list, string):
         return 'Error'
 
 
-def plot_graph(eq, domain, in_domain, var_list, ran):
+def plot_2D(eq, domain, in_domain, var_list, ran, interval):
     var = var_list[0]
 
     ipt = []
     opt = []
     plt.clf()
 
-    for n in range(int((ran[1]-ran[0])/0.1)):
-        value = ran[0] + 0.1 * n
+    for n in range(int((ran[1]-ran[0])/interval)):
+        value = ran[0] + interval * n
         
         if check_domain(domain, in_domain, var_list, var+'='+str(value)):
             ans = change_x_to_num(eq, var_list, var + '=' + str(value))
@@ -110,6 +111,50 @@ def plot_graph(eq, domain, in_domain, var_list, ran):
 
 
     plt.plot(ipt, opt, 'b')
+    name = 'graph.png'
+    plt.savefig(name)
+    
+    return name
+
+
+def plot_3D(eq, domain, in_domain, var_list, ran1, ran2, interval):
+    var1 = var_list[0]
+    var2 = var_list[1]
+
+
+    ipt1 = []
+    ipt2 = []
+    opt = []
+    plt.clf()
+
+    fig = plt.figure()
+    ax = Axes3D(fig)
+
+    for n in range(int((ran1[1]-ran1[0])/interval)):
+        value1 = ran1[0] + interval * n
+
+        for m in range(int((ran2[1]-ran2[0])/interval)):
+            value2 = ran2[0] + interval * m
+
+            if check_domain(domain, in_domain, var_list, var1+'='+str(value1) +','+ var2+'='+str(value2)):
+                ans = change_x_to_num(eq, var_list, var1+'='+str(value1) +','+ var2+'='+str(value2))
+
+                ipt1.append(value1)
+                ipt2.append(value2)
+                opt.append(float(ans))
+            else:
+                ax.plot(ipt1, ipt2, opt, 'b')
+                ipt1 = []
+                ipt2 = []
+                opt = []
+
+        ax.plot(ipt1, ipt2, opt, 'b')
+        ipt1 = []
+        ipt2 = []
+        opt = []
+
+
+    ax.plot(ipt1, ipt2, opt, 'b')
     name = 'graph.png'
     plt.savefig(name)
     
@@ -172,11 +217,13 @@ def check_domain(domain, in_domain, var_list, input):
     in_domain = in_eq_domain(in_domain, var_list)
 
     for n in range(len(domain)):
-        if float(change_x_to_num(domain[n], var_list, input)) == 0:
+        opt = change_x_to_num(domain[n], var_list, input)
+        if opt == 'Error' or float(opt) == 0:
             return 0
     
     for n in range(len(in_domain)):
-        if float(change_x_to_num(in_domain[n], var_list, input)) <= 0:
+        opt = change_x_to_num(in_domain[n], var_list, input)
+        if opt == 'Error' or float(opt) <= 0:
             return 0
 
     return 1

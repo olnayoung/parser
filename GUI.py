@@ -4,7 +4,11 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from calculator import calcul
 from calculator import change_x_to_num
-from calculator import plot_graph
+from calculator import plot_2D
+from calculator import plot_3D
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas 
+from matplotlib.figure import Figure
 
 class App(QMainWindow):
 
@@ -121,7 +125,12 @@ class App(QMainWindow):
         self.da_label.setText(diff_ans)
 
         if len(self.var_list) == 1 and self.eq[0:3] != 'sig':
-            name = plot_graph(ans, domain, in_domain, self.var_list, [-50, 50])
+            name = plot_2D(ans, domain, in_domain, self.var_list, [-50, 50], 0.1)
+            pixmap = QPixmap(name).scaled(self.im_width, self.im_height)
+            self.im_label.setPixmap(pixmap)
+
+        elif len(self.var_list) == 2 and self.eq[0:3] != 'sig':
+            name = plot_3D(ans, domain, in_domain, self.var_list, [-50, 50], [-50, 50], 1)
             pixmap = QPixmap(name).scaled(self.im_width, self.im_height)
             self.im_label.setPixmap(pixmap)
 

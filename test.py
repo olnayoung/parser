@@ -2,7 +2,8 @@ from initialize import tokenize
 from parsing import Parser
 from calculator import calcul
 from calculator import change_x_to_num
-from calculator import plot_graph
+from calculator import plot_2D
+from calculator import plot_3D
 from calculator import sigma
 from extra_funcs import is_gathered
 from extra_funcs import many_mul
@@ -18,7 +19,7 @@ from extra_funcs import eq_domain
 from extra_funcs import diff
 
 print(calcul('log(x^2,y)', ['x', 'y']))
-# print(change_x_to_num('sig(k,k+x,0,3)', ['x', 'y'], 'x=1'))
+# print(plot_3D('sig(k,k+x,0,3)', ['x', 'y'], 'x=1'))
 
 # n = 0
 # correct = 0
