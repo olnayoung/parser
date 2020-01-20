@@ -14,6 +14,7 @@ from extra_funcs import plus
 from extra_funcs import minus
 from extra_funcs import power
 from extra_funcs import many_div
+from copy import deepcopy
 
 NUMBER = [float, int]
 
@@ -208,28 +209,32 @@ class Factor(Expr):
 
         elif self.sign == 'log':
             if temp not in in_eq:
-                in_eq.append(temp)
+                if not is_digit(temp[0]) or len(temp) > 1:
+                    in_eq.append(temp)
 
             if self.base == None:
-                base = [1, [e], 1]
+                base = [e]
             else:
                 base = self.base.eval() if isinstance(self.base, Expr) else self.base
 
                 if base not in in_eq:
-                    in_eq.append(base)
+                    if not is_digit(base[0]) or len(base) > 1:
+                        in_eq.append(base)
                 if base not in eq:
-                    eq.append(base)
+                    b = deepcopy(base)
+                    b = [b]
+                    b.append([-1])
+                    eq.append(b)
 
             if is_digit(temp[0]) and len(temp) == 1 and is_digit(base[0]) and len(base) == 1:
                 return [log(temp[0], base[0])]
             else:
                 if not is_gathered(temp) and len(temp) == 3:
                     if [temp[0], temp[1], 1] == base:
-                        # return [temp[2]]
                         return many_mul([], [1], temp[2])
                     else:
-                        # return [temp[2], ['log', [temp[0], temp[1], 1], base], 1]
-                        return many_mul([], [1, ['log', [temp[0], temp[1], 1], base], 1], [temp[2]])
+                        return [1, ['log', temp, base], 1]
+                        # return many_mul([], [1, ['log', [temp[0], temp[1], 1], base], 1], [temp[2]])
                 else:
                     return [1, ['log', temp, base], 1]
         

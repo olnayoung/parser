@@ -6,9 +6,11 @@ from calculator import calcul
 from calculator import change_x_to_num
 from calculator import plot_2D
 from calculator import plot_3D
+from calculator import differentiable_1D
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas 
 from matplotlib.figure import Figure
+from extra_funcs import from_list_to_str
 
 class App(QMainWindow):
 
@@ -26,7 +28,7 @@ class App(QMainWindow):
     def initUI(self):
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
-
+        
         # get variable
         self.v_label = QLabel(self)
         self.v_label.move(20, 10)
@@ -61,44 +63,78 @@ class App(QMainWindow):
         self.da_label.resize(self.width, 100)
         self.da_label.setAlignment(Qt.AlignTop)
 
-        # Graph
-        self.im_label = QLabel(self)
-        self.im_label.move((self.width - self.im_width)/2, self.height/2 - 100)
-        self.im_label.resize(self.im_width, self.im_height)
-        
+        # domain
+        self.domain_title_label = QLabel(self)
+        self.domain_title_label.move(int(self.width/2) + 100, 230)
+        self.domain_title_label.resize(400, 30)
+
+        self.domain_label = QLabel(self)
+        self.domain_label.move(int(self.width/2) + 130, 260)
+        self.domain_label.resize(400, 100)
+        self.domain_label.setAlignment(Qt.AlignTop)
+
         # Button for equation
         self.button = QPushButton('click', self)
         self.button.move(self.width/2 - 150, 130)
-        
-        # connect button to function on_click
         self.button.clicked.connect(self.on_click_eq)
-        # self.show()
+
+        # Graph
+        self.im_label = QLabel(self)
+        self.im_label.move(200, 400)
+        self.im_label.resize(self.im_width, self.im_height)
 
         # value
         self.value_label = QLabel(self)
         self.value_label.move(int(self.width/2), 10)
-        self.value_label.resize(310, 30)
+        self.value_label.resize(245, 30)
         self.value_label.setText('Values for variables')
+
+        self.va_label = QLabel(self)
+        self.va_label.move(int(self.width/2) + 245, 10)
+        self.va_label.resize(300, 30)
 
         self.value = QLineEdit(self)
         self.value.move(int(self.width/2), 50)
         self.value.resize(self.width/2 - 200, 30)
 
-        self.va_label = QLabel(self)
-        self.va_label.move(int(self.width/2), 90)
-        self.va_label.resize(310, 30)
-
         # Button for value
         self.button2 = QPushButton('click', self)
         self.button2.move(self.width - 150, 50)
-
-        # connect button to function on_click
         self.button2.clicked.connect(self.on_click_value)
+
+        # Differentiable
+        self.differentiable_label = QLabel(self)
+        self.differentiable_label.move(int(self.width/2), 90)
+        self.differentiable_label.resize(310, 30)
+        self.differentiable_label.setText('Differentiable')
+
+        self.differentiable = QLineEdit(self)
+        self.differentiable.move(int(self.width/2), 130)
+        self.differentiable.resize(self.width/2 - 200, 30)
+
+        self.dt_label = QLabel(self)
+        self.dt_label.move(int(self.width/2), 170)
+        self.dt_label.resize(310, 30)
+
+        # Button for Differentiable
+        self.button2 = QPushButton('click', self)
+        self.button2.move(self.width - 150, 130)
+        self.button2.clicked.connect(self.on_click_differentiable)
+
         self.show()
     
     def on_click_eq(self):
         temp = self.variable.text()
         self.eq = self.equation.text()
+        self.domain_title_label.setText('')
+        self.domain_label.setText('')
+        self.dt_label.setText('')
+
+        if not self.eq:
+            self.a_label.setText('Enter Equation')
+            self.d_label.setText('')
+            self.im_label.clear()
+            return 0
 
         self.var_list = []
         temp = temp.replace(" ", "")
@@ -111,41 +147,92 @@ class App(QMainWindow):
                     return 0
                 self.var_list.append(temp[n])
 
-        ans, diff, domain, in_domain = calcul(self.eq, self.var_list)
-        # print(ans)
+        ans, self.diff, self.domain, self.in_domain = calcul(self.eq, self.var_list)
+        
+        if ans == 'Error':
+            self.a_label.setText('*Error* ' + self.diff.args[0])
+            self.d_label.setText('')
+            self.im_label.clear()
+            return 0
 
-        self.a_label.setText('Equation is: ' + ans)
+        self.a_label.setText('Equation is: ' + str(ans))
         self.d_label.setText('Differential')
 
+        if not self.domain and not self.in_domain:
+            str_domain = 'Domain: R'
+            if len(self.var_list) == 2:
+                str_domain += '^2'
+            self.domain_title_label.setText(str_domain)
+        else:
+            str_domain = ''
+
+            for n in range(len(self.domain)):
+                str_domain = str_domain + from_list_to_str('', self.domain[n]) + ' ≠ 0' + '\n'
+            for n in range(len(self.in_domain)):
+                str_domain = str_domain + from_list_to_str('', self.in_domain[n]) + ' > 0' + '\n'
+            self.domain_title_label.setText('Domain')
+            self.domain_label.setText(str_domain)
+
+        if self.var_list:
+            if len(self.var_list) == 1 and self.eq[0:3] != 'sig':
+                name = plot_2D(ans, self.domain, self.in_domain, self.var_list, [-50, 50], 0.1)
+                pixmap = QPixmap(name).scaled(self.im_width, self.im_height)
+                self.im_label.setPixmap(pixmap)
+
+            elif len(self.var_list) == 2 and self.eq[0:3] != 'sig':
+                name = plot_3D(ans, self.domain, self.in_domain, self.var_list, [-50, 50], [-50, 50], 1)
+                pixmap = QPixmap(name).scaled(self.im_width, self.im_height)
+                self.im_label.setPixmap(pixmap)
+
+        if not self.diff:
+            self.a_label.setText('Answer is: ' + str(ans))
+            self.d_label.setText('')
+            self.im_label.clear()
+            return 0
+        
         diff_ans = ''
-        for n in range(len(diff)):
-            diff_ans = diff_ans + 'Differentiated by ' + self.var_list[n] + ': ' + diff[n] + '\n'
-            # print(diff[n])
+        for n in range(len(self.diff)):
+            diff_ans = diff_ans + 'Differentiated by ' + self.var_list[n] + ': ' + self.diff[n] + '\n'
 
         self.da_label.setText(diff_ans)
-
-        if len(self.var_list) == 1 and self.eq[0:3] != 'sig':
-            name = plot_2D(ans, domain, in_domain, self.var_list, [-50, 50], 0.1)
-            pixmap = QPixmap(name).scaled(self.im_width, self.im_height)
-            self.im_label.setPixmap(pixmap)
-
-        elif len(self.var_list) == 2 and self.eq[0:3] != 'sig':
-            name = plot_3D(ans, domain, in_domain, self.var_list, [-50, 50], [-50, 50], 1)
-            pixmap = QPixmap(name).scaled(self.im_width, self.im_height)
-            self.im_label.setPixmap(pixmap)
 
         return 0
 
     def on_click_value(self):
         if not self.variable.text():
             self.va_label.setText('Enter Equation')
+            self.im_label.clear()
+            return 0
 
+        if not self.value.text():
+            self.va_label.setText('Enter Value')
             return 0
         
         val = self.value.text()
         ans = change_x_to_num(self.eq, self.var_list, val)
 
-        self.va_label.setText(str(ans))
+        self.va_label.setText(': ' + str(ans))
+
+        return 0
+
+    def on_click_differentiable(self):
+        if not self.variable.text():
+            self.dt_label.setText('Enter Equation')
+            self.im_label.clear()
+            return 0
+
+        if not self.differentiable:
+            self.dt_label.setText('Enter Value')
+            return 0
+
+        string = self.differentiable.text()
+
+        if self.var_list:
+            if len(self.var_list) == 1 and self.eq[0:3] != 'sig':
+                if differentiable_1D(self.eq, self.diff, self.domain, self.in_domain, string):
+                    self.dt_label.setText('Differentiable at ' + string)
+                else:
+                    self.dt_label.setText('Non differentiable at ' + string)
 
         return 0
 

@@ -4,6 +4,8 @@ from extra_funcs import from_list_to_str
 from extra_funcs import in_eq_domain
 from extra_funcs import eq_domain
 from extra_funcs import diff
+from extra_funcs import is_digit
+from extra_funcs import is_same
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -31,6 +33,7 @@ def calcul(eq, var_list):
             for n in range(len(var_list)):
                 eq_diff.append(from_list_to_str('', diff(ans, var_list[n])))
 
+
             # print('f =', eq)
             # print('tokens:', eq_list)
             # print('tree: ', str(E))
@@ -38,8 +41,8 @@ def calcul(eq, var_list):
             return [from_list_to_str('', ans), eq_diff, domain, in_domain]
 
     except Exception as e:
-        print('Error: ', e)
-        return 'Error', 0, 0, 0
+        # print('Error: ', e)
+        return 'Error', e, 0, 0
 
 
 def change_x_to_num(eq, var_list, string):
@@ -85,7 +88,7 @@ def change_x_to_num(eq, var_list, string):
         return from_list_to_str('', ans)
 
     except Exception as e:
-        print('Error: ', e)
+        # print('Error: ', e)
         return 'Error'
 
 
@@ -121,7 +124,6 @@ def plot_3D(eq, domain, in_domain, var_list, ran1, ran2, interval):
     var1 = var_list[0]
     var2 = var_list[1]
 
-
     ipt1 = []
     ipt2 = []
     opt = []
@@ -139,9 +141,16 @@ def plot_3D(eq, domain, in_domain, var_list, ran1, ran2, interval):
             if check_domain(domain, in_domain, var_list, var1+'='+str(value1) +','+ var2+'='+str(value2)):
                 ans = change_x_to_num(eq, var_list, var1+'='+str(value1) +','+ var2+'='+str(value2))
 
-                ipt1.append(value1)
-                ipt2.append(value2)
-                opt.append(float(ans))
+                if is_digit(ans):
+                    ipt1.append(value1)
+                    ipt2.append(value2)
+                    opt.append(float(ans))
+                else:
+                    ax.plot(ipt1, ipt2, opt, 'b')
+                    ipt1 = []
+                    ipt2 = []
+                    opt = []
+
             else:
                 ax.plot(ipt1, ipt2, opt, 'b')
                 ipt1 = []
@@ -161,22 +170,45 @@ def plot_3D(eq, domain, in_domain, var_list, ran1, ran2, interval):
     return name
 
 
-def differentiable(eq, eq_diff, string):
+def differentiable_1D(eq, eq_diff, domain, in_domain, string):
     try:
-        variable = []
-        value = []
         string = string.replace(" ", "")
         string = string.split(',')
 
-        for n in range(len(string)):
-            temp = string[n].split('=')
-            variable.append(temp[0])
-            value.append(temp[1])
+        epsilon = 10 ** -5
+
+        temp = string[0].split('=')
+        var = temp[0]
+        value = temp[1]
+
+        if check_domain(domain, in_domain, [var], var+'='+str(float(value)+epsilon)):
+            ans_l_p = change_x_to_num(eq, [var], var+'='+str(float(value)+epsilon))
+            ans_d_l_p = change_x_to_num(eq_diff[0], [var], var+'='+str(float(value)+epsilon))
+        else:
+            return 0
+
+        if check_domain(domain, in_domain, [var], var+'='+str(float(value)-epsilon)):
+            ans_l_m = change_x_to_num(eq, [var], var+'='+str(float(value)-epsilon))
+            ans_d_l_m = change_x_to_num(eq_diff[0], [var], var+'='+str(float(value)-epsilon))
+        else:
+            return 0
+
+        if check_domain(domain, in_domain, [var], var+'='+str(value)):
+            ans = change_x_to_num(eq, [var], var+'='+value)
+            ans_d = change_x_to_num(eq_diff[0], [var], var+'='+value)
+        else:
+            return 0
+
+        epsilon = epsilon * 3
+
+        if is_same([ans_l_p, ans_l_m, ans], epsilon) and is_same([ans_d_l_p, ans_d_l_m, ans_d], epsilon):
+            return 1
+        else:
+            return 0
 
     except Exception as e:
         print('Error: ', e)
         return 'Error'
-    return 0
 
 
 def sigma(k, equation, start, end, var_list = None):

@@ -5,6 +5,7 @@ from calculator import change_x_to_num
 from calculator import plot_2D
 from calculator import plot_3D
 from calculator import sigma
+from calculator import differentiable
 from extra_funcs import is_gathered
 from extra_funcs import many_mul
 from extra_funcs import multiply
@@ -18,8 +19,8 @@ from extra_funcs import in_eq_domain
 from extra_funcs import eq_domain
 from extra_funcs import diff
 
-print(calcul('log(x^2,y)', ['x', 'y']))
-# print(plot_3D('sig(k,k+x,0,3)', ['x', 'y'], 'x=1'))
+print(calcul('log(x^2,y),', ['x', 'y']))
+# print(differentiable('x', 'x^(1/2)', [], [], 'x=0'))
 
 # n = 0
 # correct = 0

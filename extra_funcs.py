@@ -22,6 +22,16 @@ def is_gathered(left):
         return False
 
 
+def is_same(values, epsilon):
+    for n in range(len(values)):
+        for m in range(n, len(values)):
+            if n != m:
+                if abs(float(values[n]) - float(values[m])) > epsilon:
+                    return 0
+
+    return 1
+
+
 def plus(left, sequence):
     delete = []
 
