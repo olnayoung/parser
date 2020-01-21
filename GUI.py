@@ -7,13 +7,21 @@ from calculator import change_x_to_num
 from calculator import plot_2D
 from calculator import plot_3D
 from calculator import differentiable_1D
+from calculator import differentiable_2D
+from calculator import check_domain
+from extra_funcs import is_digit
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas 
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 from extra_funcs import from_list_to_str
+import numpy as np
+from mpl_toolkits.mplot3d import Axes3D
+import numpy as np
+from scipy.interpolate import griddata
+from mpl_toolkits.mplot3d import Axes3D
 
 class App(QMainWindow):
-
     def __init__(self):
         super().__init__()
         self.title = 'title'
@@ -28,7 +36,7 @@ class App(QMainWindow):
     def initUI(self):
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
-        
+
         # get variable
         self.v_label = QLabel(self)
         self.v_label.move(20, 10)
@@ -78,11 +86,6 @@ class App(QMainWindow):
         self.button.move(self.width/2 - 150, 130)
         self.button.clicked.connect(self.on_click_eq)
 
-        # Graph
-        self.im_label = QLabel(self)
-        self.im_label.move(200, 400)
-        self.im_label.resize(self.im_width, self.im_height)
-
         # value
         self.value_label = QLabel(self)
         self.value_label.move(int(self.width/2), 10)
@@ -114,7 +117,7 @@ class App(QMainWindow):
 
         self.dt_label = QLabel(self)
         self.dt_label.move(int(self.width/2), 170)
-        self.dt_label.resize(310, 30)
+        self.dt_label.resize(600, 30)
 
         # Button for Differentiable
         self.button2 = QPushButton('click', self)
@@ -133,7 +136,6 @@ class App(QMainWindow):
         if not self.eq:
             self.a_label.setText('Enter Equation')
             self.d_label.setText('')
-            self.im_label.clear()
             return 0
 
         self.var_list = []
@@ -152,7 +154,6 @@ class App(QMainWindow):
         if ans == 'Error':
             self.a_label.setText('*Error* ' + self.diff.args[0])
             self.d_label.setText('')
-            self.im_label.clear()
             return 0
 
         self.a_label.setText('Equation is: ' + str(ans))
@@ -174,20 +175,11 @@ class App(QMainWindow):
             self.domain_label.setText(str_domain)
 
         if self.var_list:
-            if len(self.var_list) == 1 and self.eq[0:3] != 'sig':
-                name = plot_2D(ans, self.domain, self.in_domain, self.var_list, [-50, 50], 0.1)
-                pixmap = QPixmap(name).scaled(self.im_width, self.im_height)
-                self.im_label.setPixmap(pixmap)
-
-            elif len(self.var_list) == 2 and self.eq[0:3] != 'sig':
-                name = plot_3D(ans, self.domain, self.in_domain, self.var_list, [-50, 50], [-50, 50], 1)
-                pixmap = QPixmap(name).scaled(self.im_width, self.im_height)
-                self.im_label.setPixmap(pixmap)
+            self.open_new_dialog(self.eq, self.diff, ans, self.domain, self.in_domain, self.var_list)
 
         if not self.diff:
             self.a_label.setText('Answer is: ' + str(ans))
             self.d_label.setText('')
-            self.im_label.clear()
             return 0
         
         diff_ans = ''
@@ -201,7 +193,6 @@ class App(QMainWindow):
     def on_click_value(self):
         if not self.variable.text():
             self.va_label.setText('Enter Equation')
-            self.im_label.clear()
             return 0
 
         if not self.value.text():
@@ -218,7 +209,6 @@ class App(QMainWindow):
     def on_click_differentiable(self):
         if not self.variable.text():
             self.dt_label.setText('Enter Equation')
-            self.im_label.clear()
             return 0
 
         if not self.differentiable:
@@ -234,7 +224,97 @@ class App(QMainWindow):
                 else:
                     self.dt_label.setText('Non differentiable at ' + string)
 
+            elif len(self.var_list) == 2 and self.eq[0:3] != 'sig':
+                [dx, dy] =  differentiable_2D(self.eq, self.diff, self.domain, self.in_domain, string)
+                if dx and dy:
+                    self.dt_label.setText('Differentiable at direction of ' + self.var_list[0] + ' and ' + self.var_list[1] + ' at ' + string)
+                elif dx and not dy:
+                    self.dt_label.setText('Differentiable at direction of ' + self.var_list[0] + ' \n Non differentiable at direction of ' + self.var_list[1] + 'at ' + string)
+                elif not dx and dy:
+                    self.dt_label.setText('Differentiable at direction of ' + self.var_list[1] + ' \n Non differentiable at direction of ' + self.var_list[2] + 'at ' + string)
+                else:
+                    self.dt_label.setText('Non differentiable at direction of ' + self.var_list[0] + ' and ' + self.var_list[1] + ' at ' + string)
         return 0
+
+    def open_new_dialog(self, eq, eq_diff, ans, domain, in_domain, var_list):
+        self.nd = NewWindow(eq, eq_diff, ans, domain, in_domain, var_list)
+        self.nd.show()
+
+class NewWindow(QDialog):
+    def __init__(self, eq, eq_diff, ans, domain, in_domain, var_list, parent=None):
+        super(NewWindow, self).__init__(parent)
+
+        self.eq = eq
+        self.eq_diff = eq_diff
+        self.ans = ans
+        self.domain = domain
+        self.in_domain = in_domain
+        self.var_list = var_list
+
+        self.figure = plt.figure()
+
+        self.canvas = FigureCanvas(self.figure)
+        self.toolbar = NavigationToolbar(self.canvas, self)
+        self.plot()
+
+        # set the layout
+        self.layout = QVBoxLayout()
+        self.layout.addWidget(self.toolbar)
+        self.layout.addWidget(self.canvas)
+        self.setLayout(self.layout)
+
+        self.setGeometry(1500, 700, 2000, 1000)
+
+    def plot(self):
+        self.figure.clear()
+        
+        if self.var_list:
+            ran = [-5, 5]
+            interval = 0.1
+
+            if len(self.var_list) == 1 and self.eq[0:3] != 'sig':
+                ax = self.figure.add_subplot(121)
+                plt.grid()
+                [ipts, opts] = plot_2D(self.eq, self.domain, self.in_domain, self.var_list, ran, interval)
+
+                for n in range(len(ipts)):
+                    ax.plot(ipts[n], opts[n], 'b')
+                plt.axis('equal')
+                
+                ax = self.figure.add_subplot(122)
+                plt.grid()
+                [ipts, opts] = plot_2D(self.eq_diff[0], self.domain, self.in_domain, self.var_list, ran, interval)
+
+                for n in range(len(ipts)):
+                    ax.plot(ipts[n], opts[n], 'b')
+                plt.axis('equal')
+
+                plt.tight_layout()
+
+            elif len(self.var_list) == 2 and self.eq[0:3] != 'sig':
+                # self.figure, axs = plt.subplots(2, 2)
+                # ax = Axes3D(self.figure)
+                ax = self.figure.add_subplot(1,3,1, projection='3d')
+                [ipt1, ipt2, opt] = plot_3D(self.eq, self.domain, self.in_domain, self.var_list, ran, ran, interval)
+
+                xi = np.linspace(min(ipt1), max(ipt1))
+                yi = np.linspace(min(ipt2), max(ipt2))
+                X, Y = np.meshgrid(xi, yi)
+                Z = griddata((ipt1, ipt2), opt, (X,Y), method='linear')
+                ax.contour3D(xi, yi, Z, 50)
+
+                for m in range(2):
+                    ax = self.figure.add_subplot(1,3,m+2, projection='3d')
+                    [ipt1, ipt2, opt] = plot_3D(self.eq_diff[m], self.domain, self.in_domain, self.var_list, ran, ran, interval)
+
+                    xi = np.linspace(min(ipt1), max(ipt1))
+                    yi = np.linspace(min(ipt2), max(ipt2))
+                    X, Y = np.meshgrid(xi, yi)
+                    Z = griddata((ipt1, ipt2), opt, (X,Y), method='linear')
+                    ax.contour3D(xi, yi, Z, 50)
+                plt.tight_layout()
+
+        self.canvas.draw()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

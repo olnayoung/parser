@@ -88,16 +88,16 @@ def change_x_to_num(eq, var_list, string):
         return from_list_to_str('', ans)
 
     except Exception as e:
-        # print('Error: ', e)
-        return 'Error'
+        return 'Error', e
 
 
 def plot_2D(eq, domain, in_domain, var_list, ran, interval):
     var = var_list[0]
 
+    ipts = []
+    opts = []
     ipt = []
     opt = []
-    plt.clf()
 
     for n in range(int((ran[1]-ran[0])/interval)):
         value = ran[0] + interval * n
@@ -105,19 +105,24 @@ def plot_2D(eq, domain, in_domain, var_list, ran, interval):
         if check_domain(domain, in_domain, var_list, var+'='+str(value)):
             ans = change_x_to_num(eq, var_list, var + '=' + str(value))
 
-            ipt.append(value)
-            opt.append(float(ans))
+            if is_digit(ans):
+                ipt.append(value)
+                opt.append(float(ans))
+            else:
+                ipts.append(ipt)
+                opts.append(opt)
+                ipt = []
+                opt = []
         else:
-            plt.plot(ipt, opt, 'b')
+            ipts.append(ipt)
+            opts.append(opt)
             ipt = []
             opt = []
 
-
-    plt.plot(ipt, opt, 'b')
-    name = 'graph.png'
-    plt.savefig(name)
+    ipts.append(ipt)
+    opts.append(opt)
     
-    return name
+    return [ipts, opts]
 
 
 def plot_3D(eq, domain, in_domain, var_list, ran1, ran2, interval):
@@ -127,10 +132,6 @@ def plot_3D(eq, domain, in_domain, var_list, ran1, ran2, interval):
     ipt1 = []
     ipt2 = []
     opt = []
-    plt.clf()
-
-    fig = plt.figure()
-    ax = Axes3D(fig)
 
     for n in range(int((ran1[1]-ran1[0])/interval)):
         value1 = ran1[0] + interval * n
@@ -145,29 +146,8 @@ def plot_3D(eq, domain, in_domain, var_list, ran1, ran2, interval):
                     ipt1.append(value1)
                     ipt2.append(value2)
                     opt.append(float(ans))
-                else:
-                    ax.plot(ipt1, ipt2, opt, 'b')
-                    ipt1 = []
-                    ipt2 = []
-                    opt = []
-
-            else:
-                ax.plot(ipt1, ipt2, opt, 'b')
-                ipt1 = []
-                ipt2 = []
-                opt = []
-
-        ax.plot(ipt1, ipt2, opt, 'b')
-        ipt1 = []
-        ipt2 = []
-        opt = []
-
-
-    ax.plot(ipt1, ipt2, opt, 'b')
-    name = 'graph.png'
-    plt.savefig(name)
     
-    return name
+    return [ipt1, ipt2, opt]
 
 
 def differentiable_1D(eq, eq_diff, domain, in_domain, string):
@@ -199,7 +179,7 @@ def differentiable_1D(eq, eq_diff, domain, in_domain, string):
         else:
             return 0
 
-        epsilon = epsilon * 3
+        epsilon = epsilon * 1000
 
         if is_same([ans_l_p, ans_l_m, ans], epsilon) and is_same([ans_d_l_p, ans_d_l_m, ans_d], epsilon):
             return 1
@@ -209,6 +189,82 @@ def differentiable_1D(eq, eq_diff, domain, in_domain, string):
     except Exception as e:
         print('Error: ', e)
         return 'Error'
+
+def differentiable_2D(eq, eq_diff, domain, in_domain, string):
+    try:
+        dx = -1
+        dy = -1
+
+        epsilon = 0.00001
+
+        var = []
+        value = []
+        string1 = string.replace(" ", "")
+        string1 = string1.split(',')
+
+        for n in range(len(string1)):
+            temp = string1[n].split('=')
+            var.append(temp[0])
+            value.append(temp[1])
+
+        temp_string = var[0] + '=' + str(float(value[0])+epsilon) + ',' + var[1] + '=' + value[1]
+        if check_domain(domain, in_domain, var, temp_string):
+            ans_l_p_0 = change_x_to_num(eq, var, temp_string)
+            ans_dx_l_p_0 = change_x_to_num(eq_diff[0], var, temp_string)
+        else:
+            dx = 0
+
+        temp_string = var[0] + '=' + str(float(value[0])-epsilon) + ',' + var[1] + '=' + value[1]
+        if check_domain(domain, in_domain, var, temp_string):
+            ans_l_m_0 = change_x_to_num(eq, var, temp_string)
+            ans_dx_l_m_0 = change_x_to_num(eq_diff[0], var, temp_string)
+        else:
+            dx = 0
+
+        temp_string = var[0] + '=' + value[0] + ',' + var[1] + '=' + str(float(value[1])+epsilon)
+        if check_domain(domain, in_domain, var, temp_string):
+            ans_l_0_p = change_x_to_num(eq, var, temp_string)
+            ans_dy_l_0_p = change_x_to_num(eq_diff[1], var, temp_string)
+        else:
+            dy = 0
+
+        temp_string = var[0] + '=' + value[0] + ',' + var[1] + '=' + str(float(value[1])-epsilon)
+        if check_domain(domain, in_domain, var, temp_string):
+            ans_l_0_m = change_x_to_num(eq, var, temp_string)
+            ans_dy_l_0_m = change_x_to_num(eq_diff[1], var, temp_string)
+        else:
+            dy = 0
+
+        if check_domain(domain, in_domain, var, string):
+            ans = change_x_to_num(eq, var, string)
+            ans_dx = change_x_to_num(eq_diff[0], var, string)
+            ans_dy = change_x_to_num(eq_diff[1], var, string)
+        else:
+            dy = 0
+
+        epsilon = epsilon * 3
+
+        if dx == -1 and is_same([ans_l_p_0, ans_l_m_0, ans], epsilon):
+            if is_same([ans_dx_l_p_0, ans_dx_l_m_0, ans_dx], epsilon):
+                dx = 1
+            else:
+                dx = 0
+        else:
+            dx = 0
+
+        if dy == -1 and is_same([ans_l_0_p, ans_l_0_m, ans], epsilon):
+            if is_same([ans_dy_l_0_p, ans_dy_l_0_m, ans_dy], epsilon):
+                dy = 1
+            else:
+                dy = 0
+        else:
+            dy = 0
+        
+        return [dx, dy]
+
+    except Exception as e:
+        print('Error: ', e)
+        return 'Error', e
 
 
 def sigma(k, equation, start, end, var_list = None):
