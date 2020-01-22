@@ -17,9 +17,7 @@ from matplotlib.figure import Figure
 from extra_funcs import from_list_to_str
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
-import numpy as np
 from scipy.interpolate import griddata
-from mpl_toolkits.mplot3d import Axes3D
 
 class App(QMainWindow):
     def __init__(self):
@@ -27,8 +25,8 @@ class App(QMainWindow):
         self.title = 'title'
         self.left = 1500
         self.top = 700
-        self.width = 1500
-        self.height = 1000
+        self.width = 2000
+        self.height = 700
         self.im_width = 550
         self.im_height = 550
         self.initUI()
@@ -63,21 +61,21 @@ class App(QMainWindow):
 
         # differential
         self.d_label = QLabel(self)
-        self.d_label.move(20, 230)
+        self.d_label.move(20, 330)
         self.d_label.resize(self.width, 30)
 
         self.da_label = QLabel(self)
-        self.da_label.move(50, 260)
+        self.da_label.move(50, 360)
         self.da_label.resize(self.width, 100)
         self.da_label.setAlignment(Qt.AlignTop)
 
         # domain
         self.domain_title_label = QLabel(self)
-        self.domain_title_label.move(int(self.width/2) + 100, 230)
+        self.domain_title_label.move(20, 230)
         self.domain_title_label.resize(400, 30)
 
         self.domain_label = QLabel(self)
-        self.domain_label.move(int(self.width/2) + 130, 260)
+        self.domain_label.move(50, 260)
         self.domain_label.resize(400, 100)
         self.domain_label.setAlignment(Qt.AlignTop)
 
@@ -94,7 +92,7 @@ class App(QMainWindow):
 
         self.va_label = QLabel(self)
         self.va_label.move(int(self.width/2) + 245, 10)
-        self.va_label.resize(300, 30)
+        self.va_label.resize(int(self.width/2), 30)
 
         self.value = QLineEdit(self)
         self.value.move(int(self.width/2), 50)
@@ -191,17 +189,17 @@ class App(QMainWindow):
         return 0
 
     def on_click_value(self):
-        if not self.variable.text():
-            self.va_label.setText('Enter Equation')
+        if not self.variable.text() or not self.eq:
+            self.va_label.setText(': Enter Equation')
             return 0
 
         if not self.value.text():
-            self.va_label.setText('Enter Value')
+            self.va_label.setText(': Enter Value')
             return 0
         
         val = self.value.text()
         ans = change_x_to_num(self.eq, self.var_list, val)
-
+        
         self.va_label.setText(': ' + str(ans))
 
         return 0
@@ -269,12 +267,14 @@ class NewWindow(QDialog):
         self.figure.clear()
         
         if self.var_list:
-            ran = [-5, 5]
+            ran = [-10, 10]
             interval = 0.1
 
             if len(self.var_list) == 1 and self.eq[0:3] != 'sig':
                 ax = self.figure.add_subplot(121)
                 plt.grid()
+                ax.set_xlabel(self.var_list[0])
+                ax.set_ylabel('f('+self.var_list[0]+')')
                 [ipts, opts] = plot_2D(self.eq, self.domain, self.in_domain, self.var_list, ran, interval)
 
                 for n in range(len(ipts)):
@@ -283,6 +283,8 @@ class NewWindow(QDialog):
                 
                 ax = self.figure.add_subplot(122)
                 plt.grid()
+                ax.set_xlabel(self.var_list[0])
+                ax.set_ylabel('df/d'+self.var_list[0])
                 [ipts, opts] = plot_2D(self.eq_diff[0], self.domain, self.in_domain, self.var_list, ran, interval)
 
                 for n in range(len(ipts)):
@@ -295,23 +297,29 @@ class NewWindow(QDialog):
                 # self.figure, axs = plt.subplots(2, 2)
                 # ax = Axes3D(self.figure)
                 ax = self.figure.add_subplot(1,3,1, projection='3d')
+                ax.set_xlabel(self.var_list[0])
+                ax.set_ylabel(self.var_list[1])
+                ax.set_zlabel('f('+self.var_list[0]+', '+self.var_list[1]+')')
                 [ipt1, ipt2, opt] = plot_3D(self.eq, self.domain, self.in_domain, self.var_list, ran, ran, interval)
 
                 xi = np.linspace(min(ipt1), max(ipt1))
                 yi = np.linspace(min(ipt2), max(ipt2))
                 X, Y = np.meshgrid(xi, yi)
-                Z = griddata((ipt1, ipt2), opt, (X,Y), method='linear')
-                ax.contour3D(xi, yi, Z, 50)
+                Z = griddata((ipt1, ipt2), opt, (X,Y))
+                ax.plot_surface(X, Y, Z)
 
                 for m in range(2):
                     ax = self.figure.add_subplot(1,3,m+2, projection='3d')
+                    ax.set_xlabel(self.var_list[0])
+                    ax.set_ylabel(self.var_list[1])
+                    ax.set_zlabel('df/d'+self.var_list[m])
                     [ipt1, ipt2, opt] = plot_3D(self.eq_diff[m], self.domain, self.in_domain, self.var_list, ran, ran, interval)
 
                     xi = np.linspace(min(ipt1), max(ipt1))
                     yi = np.linspace(min(ipt2), max(ipt2))
                     X, Y = np.meshgrid(xi, yi)
-                    Z = griddata((ipt1, ipt2), opt, (X,Y), method='linear')
-                    ax.contour3D(xi, yi, Z, 50)
+                    Z = griddata((ipt1, ipt2), opt, (X,Y))
+                    ax.plot_surface(X, Y, Z)
                 plt.tight_layout()
 
         self.canvas.draw()

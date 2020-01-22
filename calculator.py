@@ -6,8 +6,6 @@ from extra_funcs import eq_domain
 from extra_funcs import diff
 from extra_funcs import is_digit
 from extra_funcs import is_same
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 
 
 ### main function
@@ -37,6 +35,8 @@ def calcul(eq, var_list):
             # print('f =', eq)
             # print('tokens:', eq_list)
             # print('tree: ', str(E))
+            # domain = list(set(domain))
+            # in_domain = list(set(in_domain))
 
             return [from_list_to_str('', ans), eq_diff, domain, in_domain]
 
@@ -88,7 +88,7 @@ def change_x_to_num(eq, var_list, string):
         return from_list_to_str('', ans)
 
     except Exception as e:
-        return 'Error', e
+        return '*Error* ' + str(e)
 
 
 def plot_2D(eq, domain, in_domain, var_list, ran, interval):
@@ -146,7 +146,7 @@ def plot_3D(eq, domain, in_domain, var_list, ran1, ran2, interval):
                     ipt1.append(value1)
                     ipt2.append(value2)
                     opt.append(float(ans))
-    
+
     return [ipt1, ipt2, opt]
 
 
@@ -306,12 +306,12 @@ def check_domain(domain, in_domain, var_list, input):
 
     for n in range(len(domain)):
         opt = change_x_to_num(domain[n], var_list, input)
-        if opt == 'Error' or float(opt) == 0:
+        if opt[0] == 'Error' or float(opt) == 0:
             return 0
     
     for n in range(len(in_domain)):
         opt = change_x_to_num(in_domain[n], var_list, input)
-        if opt == 'Error' or float(opt) <= 0:
+        if opt[0] == 'Error' or float(opt) <= 0:
             return 0
 
     return 1

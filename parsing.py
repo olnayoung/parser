@@ -6,7 +6,7 @@
 # S' := '^' F S'
 # F  := '(' E ')' | '-' F | int | log F | sin F | ...
 
-from math import log, sin, cos, tan, pi, e
+from math import log, sin, cos, tan, pi, e, inf
 from extra_funcs import is_digit
 from extra_funcs import is_gathered
 from extra_funcs import many_mul
@@ -76,30 +76,30 @@ class Term(Expr):
                 for m in range(int(len(domain[n])/2)):
                     idx = 2*m + 1
                     if is_digit(domain[n][idx+1]):
-                        if domain[n][idx+1] < 0:    
+                        if domain[n][idx+1] < 0 and domain[n][idx] not in eq:
                             eq.append(domain[n][idx])
-                        elif 0 < domain[n][idx+1] < 1:
+                        elif 0 < domain[n][idx+1] < 1 and domain[n][idx] not in in_eq:
                             in_eq.append(domain[n][idx])
                     else:
                         if len(domain[n][idx+1]) == 1:
-                            if domain[n][idx+1][0] < 0:    
+                            if domain[n][idx+1][0] < 0 and domain[n][idx] not in eq:
                                 eq.append(domain[n][idx])
-                            elif 0 < domain[n][idx+1][0] < 1:
+                            elif 0 < domain[n][idx+1][0] < 1 and domain[n][idx] not in in_eq:
                                 in_eq.append(domain[n][idx])
         else:
             for m in range(int(len(domain)/2)):
                 idx = 2*m + 1
 
                 if is_digit(domain[idx+1]):
-                    if domain[idx+1] < 0:    
+                    if domain[idx+1] < 0 and domain[idx] not in eq: 
                         eq.append(domain[idx])
-                    elif 0 < domain[idx+1] < 1:
+                    elif 0 < domain[idx+1] < 1 and domain[idx] not in in_eq:
                         in_eq.append(domain[idx])
                 else:
                     if len(domain[idx+1]) == 1:
-                        if domain[idx+1][0] < 0:    
+                        if domain[idx+1][0] < 0 and domain[idx] not in eq:
                             eq.append(domain[idx])
-                        elif 0 < domain[idx+1][0] < 1:
+                        elif 0 < domain[idx+1][0] < 1 and domain[idx] not in in_eq:
                             in_eq.append(domain[idx])
 
         return domain
@@ -203,7 +203,10 @@ class Factor(Expr):
             func = self.funcs[self.sign]
 
             if is_digit(temp[0]) and len(temp) == 1:
-                return [func(temp[0])]
+                if self.sign == 'tan' and temp[0] == (pi/2):
+                    return [inf]
+                else:
+                    return [func(temp[0])]
             else:
                 return [1, [self.sign, temp], 1]
 

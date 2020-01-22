@@ -1,4 +1,4 @@
-from math import log, sin, cos, tan, pi, e
+from math import log, sin, cos, tan, pi, e, inf
 from sympy import Symbol, solve
 from copy import deepcopy
 
