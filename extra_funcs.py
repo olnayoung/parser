@@ -114,7 +114,7 @@ def minus(left, sequence):
                     continue
             
             if not check:
-                sequence[0] *= -1
+                sequence[n][0] *= -1
                 left.append(sequence[n])
 
     while delete:

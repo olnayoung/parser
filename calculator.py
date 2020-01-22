@@ -6,6 +6,7 @@ from extra_funcs import eq_domain
 from extra_funcs import diff
 from extra_funcs import is_digit
 from extra_funcs import is_same
+from math import nan
 
 
 ### main function
@@ -94,8 +95,6 @@ def change_x_to_num(eq, var_list, string):
 def plot_2D(eq, domain, in_domain, var_list, ran, interval):
     var = var_list[0]
 
-    ipts = []
-    opts = []
     ipt = []
     opt = []
 
@@ -104,25 +103,18 @@ def plot_2D(eq, domain, in_domain, var_list, ran, interval):
         
         if check_domain(domain, in_domain, var_list, var+'='+str(value)):
             ans = change_x_to_num(eq, var_list, var + '=' + str(value))
+            ipt.append(value)
 
             if is_digit(ans):
-                ipt.append(value)
                 opt.append(float(ans))
             else:
-                ipts.append(ipt)
-                opts.append(opt)
-                ipt = []
-                opt = []
+                opt.append(nan)
         else:
-            ipts.append(ipt)
-            opts.append(opt)
-            ipt = []
-            opt = []
+            ipt.append(value)
+            opt.append(nan)
 
-    ipts.append(ipt)
-    opts.append(opt)
     
-    return [ipts, opts]
+    return [ipt, opt]
 
 
 def plot_3D(eq, domain, in_domain, var_list, ran1, ran2, interval):
@@ -141,11 +133,17 @@ def plot_3D(eq, domain, in_domain, var_list, ran1, ran2, interval):
 
             if check_domain(domain, in_domain, var_list, var1+'='+str(value1) +','+ var2+'='+str(value2)):
                 ans = change_x_to_num(eq, var_list, var1+'='+str(value1) +','+ var2+'='+str(value2))
+                ipt1.append(value1)
+                ipt2.append(value2)
 
                 if is_digit(ans):
-                    ipt1.append(value1)
-                    ipt2.append(value2)
                     opt.append(float(ans))
+                else:
+                    opt.append(nan)
+            else:
+                ipt1.append(value1)
+                ipt2.append(value2)
+                opt.append(nan)
 
     return [ipt1, ipt2, opt]
 
@@ -240,6 +238,7 @@ def differentiable_2D(eq, eq_diff, domain, in_domain, string):
             ans_dx = change_x_to_num(eq_diff[0], var, string)
             ans_dy = change_x_to_num(eq_diff[1], var, string)
         else:
+            dx = 0
             dy = 0
 
         epsilon = epsilon * 3
@@ -260,6 +259,7 @@ def differentiable_2D(eq, eq_diff, domain, in_domain, string):
         else:
             dy = 0
         
+
         return [dx, dy]
 
     except Exception as e:
@@ -306,12 +306,12 @@ def check_domain(domain, in_domain, var_list, input):
 
     for n in range(len(domain)):
         opt = change_x_to_num(domain[n], var_list, input)
-        if opt[0] == 'Error' or float(opt) == 0:
+        if opt[0] == '*' or float(opt) == 0:
             return 0
     
     for n in range(len(in_domain)):
         opt = change_x_to_num(in_domain[n], var_list, input)
-        if opt[0] == 'Error' or float(opt) <= 0:
+        if opt[0] == '*' or float(opt) <= 0:
             return 0
 
     return 1

@@ -204,7 +204,7 @@ class Factor(Expr):
 
             if is_digit(temp[0]) and len(temp) == 1:
                 if self.sign == 'tan' and temp[0] == (pi/2):
-                    return [inf]
+                    raise Exception('Cannot define tan(pi/2)')
                 else:
                     return [func(temp[0])]
             else:

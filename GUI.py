@@ -115,7 +115,7 @@ class App(QMainWindow):
 
         self.dt_label = QLabel(self)
         self.dt_label.move(int(self.width/2), 170)
-        self.dt_label.resize(600, 30)
+        self.dt_label.resize(int(self.width/2), 30)
 
         # Button for Differentiable
         self.button2 = QPushButton('click', self)
@@ -173,7 +173,7 @@ class App(QMainWindow):
             self.domain_label.setText(str_domain)
 
         if self.var_list:
-            self.open_new_dialog(self.eq, self.diff, ans, self.domain, self.in_domain, self.var_list)
+            self.open_new_dialog(self.eq, self.diff, self.domain, self.in_domain, self.var_list)
 
         if not self.diff:
             self.a_label.setText('Answer is: ' + str(ans))
@@ -234,17 +234,16 @@ class App(QMainWindow):
                     self.dt_label.setText('Non differentiable at direction of ' + self.var_list[0] + ' and ' + self.var_list[1] + ' at ' + string)
         return 0
 
-    def open_new_dialog(self, eq, eq_diff, ans, domain, in_domain, var_list):
-        self.nd = NewWindow(eq, eq_diff, ans, domain, in_domain, var_list)
+    def open_new_dialog(self, eq, eq_diff, domain, in_domain, var_list):
+        self.nd = NewWindow(eq, eq_diff, domain, in_domain, var_list)
         self.nd.show()
 
 class NewWindow(QDialog):
-    def __init__(self, eq, eq_diff, ans, domain, in_domain, var_list, parent=None):
+    def __init__(self, eq, eq_diff, domain, in_domain, var_list, parent=None):
         super(NewWindow, self).__init__(parent)
 
         self.eq = eq
         self.eq_diff = eq_diff
-        self.ans = ans
         self.domain = domain
         self.in_domain = in_domain
         self.var_list = var_list
@@ -267,62 +266,52 @@ class NewWindow(QDialog):
         self.figure.clear()
         
         if self.var_list:
-            ran = [-10, 10]
-            interval = 0.1
+            self.ran = [-10, 10]
+            self.interval = 0.1
 
             if len(self.var_list) == 1 and self.eq[0:3] != 'sig':
-                ax = self.figure.add_subplot(121)
-                plt.grid()
-                ax.set_xlabel(self.var_list[0])
-                ax.set_ylabel('f('+self.var_list[0]+')')
-                [ipts, opts] = plot_2D(self.eq, self.domain, self.in_domain, self.var_list, ran, interval)
+                self.ax = self.figure.add_subplot(121)
+                self.ax.set_ylabel('f('+self.var_list[0]+')')
+                self.plot_2D_graph(self.eq)
 
-                for n in range(len(ipts)):
-                    ax.plot(ipts[n], opts[n], 'b')
-                plt.axis('equal')
-                
-                ax = self.figure.add_subplot(122)
-                plt.grid()
-                ax.set_xlabel(self.var_list[0])
-                ax.set_ylabel('df/d'+self.var_list[0])
-                [ipts, opts] = plot_2D(self.eq_diff[0], self.domain, self.in_domain, self.var_list, ran, interval)
-
-                for n in range(len(ipts)):
-                    ax.plot(ipts[n], opts[n], 'b')
-                plt.axis('equal')
+                self.ax = self.figure.add_subplot(122)
+                self.ax.set_ylabel('df/d'+self.var_list[0])
+                self.plot_2D_graph(self.eq_diff[0])
 
                 plt.tight_layout()
 
             elif len(self.var_list) == 2 and self.eq[0:3] != 'sig':
-                # self.figure, axs = plt.subplots(2, 2)
-                # ax = Axes3D(self.figure)
-                ax = self.figure.add_subplot(1,3,1, projection='3d')
-                ax.set_xlabel(self.var_list[0])
-                ax.set_ylabel(self.var_list[1])
-                ax.set_zlabel('f('+self.var_list[0]+', '+self.var_list[1]+')')
-                [ipt1, ipt2, opt] = plot_3D(self.eq, self.domain, self.in_domain, self.var_list, ran, ran, interval)
-
-                xi = np.linspace(min(ipt1), max(ipt1))
-                yi = np.linspace(min(ipt2), max(ipt2))
-                X, Y = np.meshgrid(xi, yi)
-                Z = griddata((ipt1, ipt2), opt, (X,Y))
-                ax.plot_surface(X, Y, Z)
+                self.ax = self.figure.add_subplot(1,3,1, projection='3d')
+                self.ax.set_zlabel('f('+self.var_list[0]+', '+self.var_list[1]+')')
+                self.plot_3D_graph(self.eq)
 
                 for m in range(2):
-                    ax = self.figure.add_subplot(1,3,m+2, projection='3d')
-                    ax.set_xlabel(self.var_list[0])
-                    ax.set_ylabel(self.var_list[1])
-                    ax.set_zlabel('df/d'+self.var_list[m])
-                    [ipt1, ipt2, opt] = plot_3D(self.eq_diff[m], self.domain, self.in_domain, self.var_list, ran, ran, interval)
+                    self.ax = self.figure.add_subplot(1,3,m+2, projection='3d')
+                    self.ax.set_zlabel('df/d'+self.var_list[m])
+                    self.plot_3D_graph(self.eq_diff[m])
 
-                    xi = np.linspace(min(ipt1), max(ipt1))
-                    yi = np.linspace(min(ipt2), max(ipt2))
-                    X, Y = np.meshgrid(xi, yi)
-                    Z = griddata((ipt1, ipt2), opt, (X,Y))
-                    ax.plot_surface(X, Y, Z)
                 plt.tight_layout()
 
         self.canvas.draw()
+
+    def plot_2D_graph(self, equation):
+        plt.grid()
+        self.ax.set_xlabel(self.var_list[0])
+        [ipt, opt] = plot_2D(equation, self.domain, self.in_domain, self.var_list, self.ran, self.interval)
+
+        self.ax.plot(ipt, opt, 'b')
+        plt.axis('equal')
+
+    def plot_3D_graph(self, equation):
+        self.ax.set_xlabel(self.var_list[0])
+        self.ax.set_ylabel(self.var_list[1])
+        [ipt1, ipt2, opt] = plot_3D(equation, self.domain, self.in_domain, self.var_list, self.ran, self.ran, self.interval)
+
+        xi = np.linspace(min(ipt1), max(ipt1))
+        yi = np.linspace(min(ipt2), max(ipt2))
+        X, Y = np.meshgrid(xi, yi)
+        Z = griddata((ipt1, ipt2), opt, (X,Y))
+        self.ax.plot_surface(X, Y, Z, cmap = 'cool')
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
