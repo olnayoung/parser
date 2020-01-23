@@ -415,7 +415,7 @@ class NewWindow(QDialog):
         yi = np.linspace(min(ipt2), max(ipt2))
         X, Y = np.meshgrid(xi, yi)
         Z = griddata((ipt1, ipt2), opt, (X,Y))
-        self.ax.plot_surface(X, Y, Z, cmap = 'cool')
+        self.ax.plot_surface(X, Y, Z, cmap = 'cool', vmin = np.nanmin(Z), vmax = np.nanmax(Z))
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
