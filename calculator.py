@@ -32,17 +32,9 @@ def calcul(eq, var_list):
             for n in range(len(var_list)):
                 eq_diff.append(from_list_to_str('', diff(ans, var_list[n])))
 
-
-            # print('f =', eq)
-            # print('tokens:', eq_list)
-            # print('tree: ', str(E))
-            # domain = list(set(domain))
-            # in_domain = list(set(in_domain))
-
             return [from_list_to_str('', ans), eq_diff, domain, in_domain]
 
     except Exception as e:
-        # print('Error: ', e)
         return 'Error', e, 0, 0
 
 
@@ -58,6 +50,10 @@ def change_x_to_num(eq, var_list, string):
 
         for n in range(len(string)):
             temp = string[n].split('=')
+            if temp[0] not in var_list:
+                raise Exception('%s is not in current variable list' % (temp[0]))
+            if len(temp) != 2 or not is_digit(temp[1]):
+                raise Exception('Wrong input')
             variable.append(temp[0])
             value.append(temp[1])
 
@@ -77,7 +73,7 @@ def change_x_to_num(eq, var_list, string):
             for n in range(4, len(eq_list)-6):
                 sig_eq += str(eq_list[n])
 
-            ans, a, b, c = sigma(eq_list[2], sig_eq, eq_list[-5], eq_list[-3], var_list)
+            ans, _, _, _ = sigma(eq_list[2], sig_eq, eq_list[-5], eq_list[-3], var_list)
 
             return ans
 
@@ -95,6 +91,8 @@ def change_x_to_num(eq, var_list, string):
 def plot_2D(eq, domain, in_domain, var_list, ran, interval):
     var = var_list[0]
 
+    ipts = []
+    opts = []
     ipt = []
     opt = []
 
@@ -103,18 +101,26 @@ def plot_2D(eq, domain, in_domain, var_list, ran, interval):
         
         if check_domain(domain, in_domain, var_list, var+'='+str(value)):
             ans = change_x_to_num(eq, var_list, var + '=' + str(value))
-            ipt.append(value)
 
             if is_digit(ans):
+                ipt.append(value)
                 opt.append(float(ans))
             else:
-                opt.append(nan)
+                ipts.append(ipt)
+                opts.append(opt)
+                ipt = []
+                opt = []
         else:
-            ipt.append(value)
-            opt.append(nan)
+            ipts.append(ipt)
+            opts.append(opt)
+            ipt = []
+            opt = []
+
+    ipts.append(ipt)
+    opts.append(opt)
 
     
-    return [ipt, opt]
+    return [ipts, opts]
 
 
 def plot_3D(eq, domain, in_domain, var_list, ran1, ran2, interval):
@@ -148,16 +154,30 @@ def plot_3D(eq, domain, in_domain, var_list, ran1, ran2, interval):
     return [ipt1, ipt2, opt]
 
 
-def differentiable_1D(eq, eq_diff, domain, in_domain, string):
+def differentiable_1D(eq, eq_diff, domain, in_domain, string, var_list):
     try:
-        string = string.replace(" ", "")
-        string = string.split(',')
 
         epsilon = 10 ** -5
 
-        temp = string[0].split('=')
-        var = temp[0]
-        value = temp[1]
+        var = []
+        value = []
+        string1 = string.replace(" ", "")
+        string1 = string1.split(',')
+
+        for n in range(len(string1)):
+            temp = string1[n].split('=')
+            if temp[0] not in var_list:
+                raise Exception('%s is not in current variable list' % (temp[0]))
+            if len(temp) != 2 or not is_digit(temp[1]):
+                raise Exception('Wrong input')
+            var.append(temp[0])
+            value.append(temp[1])
+        
+        if len(var) != 1:
+            raise Exception('Expected 1 variable but got %d' % (len(var)))
+        else:
+            var = var[0]
+            value = value[0]
 
         if check_domain(domain, in_domain, [var], var+'='+str(float(value)+epsilon)):
             ans_l_p = change_x_to_num(eq, [var], var+'='+str(float(value)+epsilon))
@@ -186,14 +206,14 @@ def differentiable_1D(eq, eq_diff, domain, in_domain, string):
 
     except Exception as e:
         print('Error: ', e)
-        return 'Error'
+        return '*Error* ' + str(e)
 
-def differentiable_2D(eq, eq_diff, domain, in_domain, string):
+def differentiable_2D(eq, eq_diff, domain, in_domain, string, var_list):
     try:
         dx = -1
         dy = -1
 
-        epsilon = 0.00001
+        epsilon = 10**(-9)
 
         var = []
         value = []
@@ -202,8 +222,15 @@ def differentiable_2D(eq, eq_diff, domain, in_domain, string):
 
         for n in range(len(string1)):
             temp = string1[n].split('=')
+            if temp[0] not in var_list:
+                raise Exception('%s is not in current variable list' % (temp[0]))
+            if len(temp) != 2 or not is_digit(temp[1]):
+                raise Exception('Wrong input')
             var.append(temp[0])
             value.append(temp[1])
+
+        if len(var) != 2:
+            raise Exception('Expected 2 variable but got %d' % (len(var)))
 
         temp_string = var[0] + '=' + str(float(value[0])+epsilon) + ',' + var[1] + '=' + value[1]
         if check_domain(domain, in_domain, var, temp_string):
@@ -241,7 +268,7 @@ def differentiable_2D(eq, eq_diff, domain, in_domain, string):
             dx = 0
             dy = 0
 
-        epsilon = epsilon * 3
+        epsilon = epsilon * 10
 
         if dx == -1 and is_same([ans_l_p_0, ans_l_m_0, ans], epsilon):
             if is_same([ans_dx_l_p_0, ans_dx_l_m_0, ans_dx], epsilon):
@@ -264,7 +291,7 @@ def differentiable_2D(eq, eq_diff, domain, in_domain, string):
 
     except Exception as e:
         print('Error: ', e)
-        return 'Error', e
+        return '*Error* ', str(e)
 
 
 def sigma(k, equation, start, end, var_list = None):
@@ -311,7 +338,7 @@ def check_domain(domain, in_domain, var_list, input):
     
     for n in range(len(in_domain)):
         opt = change_x_to_num(in_domain[n], var_list, input)
-        if opt[0] == '*' or float(opt) <= 0:
+        if opt[0] == '*' or float(opt) < 0:
             return 0
 
     return 1

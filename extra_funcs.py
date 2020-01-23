@@ -45,28 +45,30 @@ def plus(left, sequence):
                 left[m][0] += sequence[0]
                 check = 1
 
-                if left[m][0] == 0:
-                    delete.append(m)
+            if left[m][0] == 0:
+                delete.append(m)
 
                 continue
         
-        if not check:
+        if not check and sequence[0] != 0:
             left.append(sequence)
     
     else:
         for n in range(len(sequence)):
             check = 0
             for m in range(len(left)):
+                if left[m][0] == 0:
+                    delete.append(m)
                 if sequence[n][1:] == left[m][1:]:
                     left[m][0] += sequence[n][0]
                     check = 1
 
-                    if left[m][0] == 0:
-                        delete.append(m)
+                if left[m][0] == 0:
+                    delete.append(m)
                     
                     continue
             
-            if not check:
+            if not check and sequence[n][0] != 0:
                 left.append(sequence[n])
 
     while delete:

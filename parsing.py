@@ -214,6 +214,7 @@ class Factor(Expr):
             if temp not in in_eq:
                 if not is_digit(temp[0]) or len(temp) > 1:
                     in_eq.append(temp)
+                    eq.append(temp)
 
             if self.base == None:
                 base = [e]
@@ -223,6 +224,8 @@ class Factor(Expr):
                 if base not in in_eq:
                     if not is_digit(base[0]) or len(base) > 1:
                         in_eq.append(base)
+                        eq.append(base)
+                        eq.append(plus(base, [1]))
                 if base not in eq:
                     b = deepcopy(base)
                     b = [b]
@@ -318,8 +321,8 @@ def takeSequenceTail(tokens):
         sequenceTail = takeSequenceTail(tokens)
         return SequenceTail(op, factor, sequenceTail)
 
-    elif tokens.isType('(') or tokens.getItem() in var_list or is_digit(tokens.getItem()):
-        raise Exception("Unexpected token: %s" % (tokens.getItem()))
+    # elif tokens.isType('(') or tokens.getItem() in var_list or is_digit(tokens.getItem()):
+    #     raise Exception("Unexpected token: %s" % (tokens.getItem()))
 
 def takeFactor(tokens):
     funcs_list = ['sin', 'cos', 'tan']

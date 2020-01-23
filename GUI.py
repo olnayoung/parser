@@ -53,6 +53,7 @@ class App(QMainWindow):
         self.equation = QLineEdit(self)
         self.equation.move(20, 130)
         self.equation.resize(self.width/2 - 200, 30)
+        self.equation.returnPressed.connect(self.on_click_eq)
 
         # show equation
         self.a_label = QLabel(self)
@@ -61,11 +62,11 @@ class App(QMainWindow):
 
         # differential
         self.d_label = QLabel(self)
-        self.d_label.move(20, 330)
+        self.d_label.move(20, 430)
         self.d_label.resize(self.width, 30)
 
         self.da_label = QLabel(self)
-        self.da_label.move(50, 360)
+        self.da_label.move(50, 460)
         self.da_label.resize(self.width, 100)
         self.da_label.setAlignment(Qt.AlignTop)
 
@@ -76,7 +77,8 @@ class App(QMainWindow):
 
         self.domain_label = QLabel(self)
         self.domain_label.move(50, 260)
-        self.domain_label.resize(400, 100)
+        self.domain_label.resize(400, 150)
+        # self.domain_label.resize(self.domain_label.sizeHint())
         self.domain_label.setAlignment(Qt.AlignTop)
 
         # Button for equation
@@ -97,11 +99,12 @@ class App(QMainWindow):
         self.value = QLineEdit(self)
         self.value.move(int(self.width/2), 50)
         self.value.resize(self.width/2 - 200, 30)
+        self.value.returnPressed.connect(self.on_click_value)
 
         # Button for value
-        self.button2 = QPushButton('click', self)
-        self.button2.move(self.width - 150, 50)
-        self.button2.clicked.connect(self.on_click_value)
+        self.button1 = QPushButton('click', self)
+        self.button1.move(self.width - 150, 50)
+        self.button1.clicked.connect(self.on_click_value)
 
         # Differentiable
         self.differentiable_label = QLabel(self)
@@ -112,10 +115,12 @@ class App(QMainWindow):
         self.differentiable = QLineEdit(self)
         self.differentiable.move(int(self.width/2), 130)
         self.differentiable.resize(self.width/2 - 200, 30)
+        self.differentiable.returnPressed.connect(self.on_click_differentiable)
 
         self.dt_label = QLabel(self)
         self.dt_label.move(int(self.width/2), 170)
-        self.dt_label.resize(int(self.width/2), 30)
+        self.dt_label.resize(int(self.width/2), 60)
+        self.dt_label.setAlignment(Qt.AlignTop)
 
         # Button for Differentiable
         self.button2 = QPushButton('click', self)
@@ -148,6 +153,7 @@ class App(QMainWindow):
                 self.var_list.append(temp[n])
 
         ans, self.diff, self.domain, self.in_domain = calcul(self.eq, self.var_list)
+        self.eq = ans
         
         if ans == 'Error':
             self.a_label.setText('*Error* ' + self.diff.args[0])
@@ -172,7 +178,7 @@ class App(QMainWindow):
             self.domain_title_label.setText('Domain')
             self.domain_label.setText(str_domain)
 
-        if self.var_list:
+        if len(self.var_list) < 3 and self.eq[0:3] != 'sig':
             self.open_new_dialog(self.eq, self.diff, self.domain, self.in_domain, self.var_list)
 
         if not self.diff:
@@ -217,21 +223,26 @@ class App(QMainWindow):
 
         if self.var_list:
             if len(self.var_list) == 1 and self.eq[0:3] != 'sig':
-                if differentiable_1D(self.eq, self.diff, self.domain, self.in_domain, string):
+                differentiable = differentiable_1D(self.eq, self.diff, self.domain, self.in_domain, string, self.var_list)
+                if differentiable == 1:
                     self.dt_label.setText('Differentiable at ' + string)
-                else:
+                elif differentiable == 0:
                     self.dt_label.setText('Non differentiable at ' + string)
+                else:
+                    self.dt_label.setText(differentiable)
 
             elif len(self.var_list) == 2 and self.eq[0:3] != 'sig':
-                [dx, dy] =  differentiable_2D(self.eq, self.diff, self.domain, self.in_domain, string)
-                if dx and dy:
+                [dx, dy] =  differentiable_2D(self.eq, self.diff, self.domain, self.in_domain, string, self.var_list)
+                if dx == 1 and dy == 1:
                     self.dt_label.setText('Differentiable at direction of ' + self.var_list[0] + ' and ' + self.var_list[1] + ' at ' + string)
-                elif dx and not dy:
-                    self.dt_label.setText('Differentiable at direction of ' + self.var_list[0] + ' \n Non differentiable at direction of ' + self.var_list[1] + 'at ' + string)
-                elif not dx and dy:
-                    self.dt_label.setText('Differentiable at direction of ' + self.var_list[1] + ' \n Non differentiable at direction of ' + self.var_list[2] + 'at ' + string)
-                else:
+                elif dx == 1 and dy == 0:
+                    self.dt_label.setText('Differentiable at direction of ' + self.var_list[0] + ' \n Non differentiable at direction of ' + self.var_list[1] + ' at ' + string)
+                elif dx == 0 and dy == 1:
+                    self.dt_label.setText('Differentiable at direction of ' + self.var_list[1] + ' \n Non differentiable at direction of ' + self.var_list[0] + ' at ' + string)
+                elif dx == 0 and dy == 0:
                     self.dt_label.setText('Non differentiable at direction of ' + self.var_list[0] + ' and ' + self.var_list[1] + ' at ' + string)
+                else:
+                    self.dt_label.setText(dx + dy)
         return 0
 
     def open_new_dialog(self, eq, eq_diff, domain, in_domain, var_list):
@@ -248,26 +259,100 @@ class NewWindow(QDialog):
         self.in_domain = in_domain
         self.var_list = var_list
 
-        self.figure = plt.figure()
+        self.ran_x = [-10, 10]
+        self.ran_y = [-10, 10]
+        self.interval = (self.ran_x[1] - self.ran_x[0]) / 100
 
+        self.figure = plt.figure()
         self.canvas = FigureCanvas(self.figure)
         self.toolbar = NavigationToolbar(self.canvas, self)
         self.plot()
 
         # set the layout
-        self.layout = QVBoxLayout()
-        self.layout.addWidget(self.toolbar)
-        self.layout.addWidget(self.canvas)
-        self.setLayout(self.layout)
-
+        self.layout = QGridLayout(self)
         self.setGeometry(1500, 700, 2000, 1000)
+        self.layout.addWidget(self.toolbar, 0, 0)
+
+        if len(self.var_list) == 1 or len(self.var_list) == 2:
+            self.range_label = QLabel(self)
+            self.range_label.setFixedSize(110, 30)
+            self.range_label.setText('Range   ')
+
+            self.range_x_label = QLabel(self)
+            self.range_x_label.setFixedSize(30, 30)
+            self.range_x_label.setText(self.var_list[0] + ':')
+
+            self.x_value1 = QLineEdit(self)
+            self.x_value1.setFixedSize(80, 30)
+            # self.x_value1.setStyleSheet("color: blue")
+
+            self._label = QLabel(self)
+            self._label.setFixedSize(40, 30)
+            self._label.setText(' ~ ')
+
+            self.x_value2 = QLineEdit(self)
+            self.x_value2.setFixedSize(80, 30)
+
+            self.range = QHBoxLayout(self)
+            self.range.addWidget(self.range_label, Qt.AlignLeft)
+            self.range.setSpacing(0)
+            self.range.addWidget(self.range_x_label, Qt.AlignLeft)
+            self.range.setSpacing(0)
+            self.range.addWidget(self.x_value1, Qt.AlignLeft)
+            self.range.setSpacing(0)
+            self.range.addWidget(self._label, Qt.AlignLeft)
+            self.range.setSpacing(0)
+            self.range.addWidget(self.x_value2, Qt.AlignLeft)
+
+            if len(self.var_list) == 2:
+                self.range_y_label = QLabel(self)
+                self.range_y_label.setFixedSize(50, 30)
+                self.range_y_label.setText(', ' + self.var_list[1] + ' : ')
+
+                self.y_value1 = QLineEdit(self)
+                self.y_value1.setFixedSize(80, 30)
+
+                self.y_label = QLabel(self)
+                self.y_label.setFixedSize(40, 30)
+                self.y_label.setText(' ~ ')
+
+                self.y_value2 = QLineEdit(self)
+                self.y_value2.setFixedSize(80, 30)
+
+                self.range.setSpacing(0)
+                self.range.addWidget(self.range_y_label, Qt.AlignLeft)
+                self.range.setSpacing(0)
+                self.range.addWidget(self.y_value1, Qt.AlignLeft)
+                self.range.setSpacing(0)
+                self.range.addWidget(self.y_label, Qt.AlignLeft)
+                self.range.setSpacing(0)
+                self.range.addWidget(self.y_value2, Qt.AlignLeft)
+
+            self.t_label = QLabel(self)
+            self.t_label.setFixedSize(30, 30)
+            self.range.addWidget(self.t_label, Qt.AlignLeft)
+
+            self.range.setSpacing(100)
+            self.button_range = QPushButton('click', self)
+            self.button_range.setFixedSize(110, 30)
+            self.button_range.clicked.connect(self.get_range)
+            self.range.setSpacing(0)
+            self.range.addWidget(self.button_range, Qt.AlignLeft)
+
+            self.tt_label = QLabel(self)
+            self.tt_label.setFixedSize(700, 30)
+            self.range.addWidget(self.tt_label, Qt.AlignLeft)
+
+            self.range.addStretch()
+            self.layout.addLayout(self.range, 1, 0)
+
+        self.layout.addWidget(self.canvas, 2, 0)
+        self.setLayout(self.layout)
 
     def plot(self):
         self.figure.clear()
         
         if self.var_list:
-            self.ran = [-10, 10]
-            self.interval = 0.1
 
             if len(self.var_list) == 1 and self.eq[0:3] != 'sig':
                 self.ax = self.figure.add_subplot(121)
@@ -294,18 +379,37 @@ class NewWindow(QDialog):
 
         self.canvas.draw()
 
+    def get_range(self):
+        if is_digit(self.x_value1.text()) and is_digit(self.x_value2.text()):
+            self.ran_x[0] = float(self.x_value1.text())
+            self.ran_x[1] = float(self.x_value2.text())
+        else:
+            self.tt_label.setText('  Write ONLY digits')
+            return 0
+
+        if len(self.var_list) == 2:
+            self.ran_y[0] = float(self.y_value1.text())
+            self.ran_y[1] = float(self.y_value2.text())
+
+        if self.ran_x[0] >= self.ran_x[1] or self.ran_y[0] >= self.ran_y[1]:
+            self.tt_label.setText('  The Right value must be bigger than the Left value')
+            return 0
+        
+        self.plot()
+
     def plot_2D_graph(self, equation):
         plt.grid()
         self.ax.set_xlabel(self.var_list[0])
-        [ipt, opt] = plot_2D(equation, self.domain, self.in_domain, self.var_list, self.ran, self.interval)
+        [ipt, opt] = plot_2D(equation, self.domain, self.in_domain, self.var_list, self.ran_x, self.interval)
 
-        self.ax.plot(ipt, opt, 'b')
-        plt.axis('equal')
+        for n in range(len(ipt)):
+            self.ax.plot(ipt[n], opt[n], 'b')
+        # plt.axis('equal')
 
     def plot_3D_graph(self, equation):
         self.ax.set_xlabel(self.var_list[0])
         self.ax.set_ylabel(self.var_list[1])
-        [ipt1, ipt2, opt] = plot_3D(equation, self.domain, self.in_domain, self.var_list, self.ran, self.ran, self.interval)
+        [ipt1, ipt2, opt] = plot_3D(equation, self.domain, self.in_domain, self.var_list, self.ran_x, self.ran_y, self.interval)
 
         xi = np.linspace(min(ipt1), max(ipt1))
         yi = np.linspace(min(ipt2), max(ipt2))
