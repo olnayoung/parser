@@ -7,6 +7,7 @@ from extra_funcs import diff
 from extra_funcs import is_digit
 from extra_funcs import is_same
 from math import nan
+from copy import deepcopy
 
 
 ### main function

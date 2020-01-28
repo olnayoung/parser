@@ -1,5 +1,4 @@
 from math import log, sin, cos, tan, pi, e, inf
-from sympy import Symbol, solve
 from copy import deepcopy
 
 def is_digit(value):
@@ -31,6 +30,53 @@ def is_same(values, epsilon):
 
     return 1
 
+def double_bracket(temp):
+    if is_gathered(temp) and len(temp) == 1:
+        temp = temp[0]
+    return temp
+
+def is_same_variable(left, sequence):
+    out = 1
+    for n in range(int(len(sequence)/2)):
+        s_idx = 2*n+1
+
+        for t in range(int(len(left)/2)):
+            l_idx = 2*t+1
+
+            if sequence[s_idx:s_idx+2] == left[l_idx:l_idx+2]:
+                break
+
+            if l_idx == len(left)-2:
+                out = 0
+                break
+        
+        if not out:
+            break
+
+    return out
+
+def plus_sep(left, sequence, delete):
+    check = 0
+    for m in range(len(left)):
+        if sequence[1:] == left[m][1:]:
+            left[m][0] += sequence[0]
+            check = 1
+        
+        elif len(sequence) == len(left[m]):
+            if is_same_variable(left[m], sequence):
+                left[m][0] += sequence[0]
+                check = 1
+
+        if left[m][0] == 0:
+            delete.append(m)
+
+            continue
+    
+    if not check and sequence[0] != 0:
+        left.append(sequence)
+
+    return left, delete
+
 
 def plus(left, sequence):
     delete = []
@@ -39,37 +85,11 @@ def plus(left, sequence):
         left = [left]
 
     if not is_gathered(sequence):
-        check = 0
-        for m in range(len(left)):
-            if sequence[1:] == left[m][1:]:
-                left[m][0] += sequence[0]
-                check = 1
-
-            if left[m][0] == 0:
-                delete.append(m)
-
-                continue
-        
-        if not check and sequence[0] != 0:
-            left.append(sequence)
+        left, delete = plus_sep(left, sequence, delete)
     
     else:
         for n in range(len(sequence)):
-            check = 0
-            for m in range(len(left)):
-                if left[m][0] == 0:
-                    delete.append(m)
-                if sequence[n][1:] == left[m][1:]:
-                    left[m][0] += sequence[n][0]
-                    check = 1
-
-                if left[m][0] == 0:
-                    delete.append(m)
-                    
-                    continue
-            
-            if not check and sequence[n][0] != 0:
-                left.append(sequence[n])
+            left, delete = plus_sep(left, sequence[n], delete)
 
     while delete:
         t = delete.pop()
@@ -78,7 +98,32 @@ def plus(left, sequence):
     if not left:
         left.append([0])
 
+    left = double_bracket(left)
+
     return left
+
+def minus_sep(left, sequence, delete):
+    check = 0
+    for m in range(len(left)):
+        if sequence[1:] == left[m][1:]:
+            left[m][0] -= sequence[0]
+            check = 1
+
+        elif len(sequence) == len(left[m]):
+            if is_same_variable(left[m], sequence):
+                left[m][0] -= sequence[0]
+                check = 1
+
+        if left[m][0] == 0:
+            delete.append(m)
+            
+            continue
+    
+    if not check:
+        sequence[0] *= -1
+        left.append(sequence)
+
+    return left, delete
 
 def minus(left, sequence):
     delete = []
@@ -87,37 +132,11 @@ def minus(left, sequence):
         left = [left]
 
     if not is_gathered(sequence):
-        check = 0
-        for m in range(len(left)):
-            if sequence[1:] == left[m][1:]:
-                left[m][0] -= sequence[0]
-                check = 1
-
-                if left[m][0] == 0:
-                    delete.append(m)
-                
-                continue
-        
-        if not check:
-            sequence[0] *= -1
-            left.append(sequence)
+        left, delete = minus_sep(left, sequence, delete)
     
     else:
         for n in range(len(sequence)):
-            check = 0
-            for m in range(len(left)):
-                if sequence[n][1:] == left[m][1:]:
-                    left[m][0] -= sequence[n][0]
-                    check = 1
-
-                    if left[m][0] == 0:
-                        delete.append(m)
-                    
-                    continue
-            
-            if not check:
-                sequence[n][0] *= -1
-                left.append(sequence[n])
+            left, delete = minus_sep(left, sequence[n], delete)
 
     while delete:
         t = delete.pop()
@@ -125,6 +144,8 @@ def minus(left, sequence):
 
     if not left:
         left.append([0])
+
+    left = double_bracket(left)
 
     return left
 
@@ -169,10 +190,10 @@ def multiply(left, sequence):
 
             if is_digit(ans[a_idx+1]) and is_digit(sequence[s_idx+1]):
                 ans[a_idx+1] += sequence[s_idx+1]
-            elif not is_digit(ans[a_idx+1]) and is_digit(sequence[s_idx+1]):
-                ans[a_idx+1] = plus(ans[a_idx+1], [sequence[s_idx+1]])
-            elif is_digit(ans[a_idx+1]) and not is_digit(sequence[s_idx+1]):
-                ans[a_idx+1] = plus([ans[a_idx+1]], sequence[s_idx+1])
+            # elif not is_digit(ans[a_idx+1]) and is_digit(sequence[s_idx+1]):
+            #     ans[a_idx+1] = plus(ans[a_idx+1], [sequence[s_idx+1]])
+            # elif is_digit(ans[a_idx+1]) and not is_digit(sequence[s_idx+1]):
+            #     ans[a_idx+1] = plus([ans[a_idx+1]], sequence[s_idx+1])
             else:
                 ans[a_idx+1] = plus(ans[a_idx+1], sequence[s_idx+1])
             
@@ -194,7 +215,6 @@ def many_div(ans, left, sequence):
     
     else:
         if len(left) != 1:
-            # ans.append([1])
 
             if is_gathered(sequence):
                 ans.append(left)
@@ -223,9 +243,6 @@ def divide(left, sequence):
     ans = deepcopy(left)
     ans[0] /= sequence[0]
 
-    # for n in range(1, len(left)):
-    #     ans.append(left[n])
-
     for n in range(int(len(sequence)/2)):
         s_idx = 2*n+1
 
@@ -234,10 +251,10 @@ def divide(left, sequence):
 
             if is_digit(ans[a_idx+1]) and is_digit(sequence[s_idx+1]):
                 ans[a_idx+1] -= sequence[s_idx+1]
-            elif not is_digit(ans[a_idx+1]) and is_digit(sequence[s_idx+1]):
-                ans[a_idx+1] = minus(ans[a_idx+1], [sequence[s_idx+1]])
-            elif is_digit(ans[a_idx+1]) and not is_digit(sequence[s_idx+1]):
-                ans[a_idx+1] = minus([ans[a_idx+1]], sequence[s_idx+1])
+            # elif not is_digit(ans[a_idx+1]) and is_digit(sequence[s_idx+1]):
+            #     ans[a_idx+1] = minus(ans[a_idx+1], [sequence[s_idx+1]])
+            # elif is_digit(ans[a_idx+1]) and not is_digit(sequence[s_idx+1]):
+            #     ans[a_idx+1] = minus([ans[a_idx+1]], sequence[s_idx+1])
             else:
                 ans[a_idx+1] = minus(ans[a_idx+1], sequence[s_idx+1])
             
@@ -259,6 +276,7 @@ def power(left, sequence):
             sequence = sequence[0]
         ans.append([1, left, sequence])
     else:
+        sequence = double_bracket(sequence)
         if len(left) == 1:
             if left[0] != 1:
                 if is_gathered(sequence):
@@ -288,6 +306,7 @@ def power(left, sequence):
                     ans.append(left[l_idx+1] * sequence[0])
                 else:
                     ans.append(many_mul([], [left[l_idx+1]], sequence))
+
     return ans
 
 
@@ -385,10 +404,6 @@ def eq_domain(eq, var_list):
 
     for n in range(len(eq)):
         st = from_list_to_str('', eq[n])
-        # ans = solve(st, var_list)
-
-        # for m in range(len(ans)):
-        #     domain.append(ans[m])
 
         domain.append(st)
 
@@ -399,10 +414,7 @@ def in_eq_domain(in_eq, var_list):
 
     for n in range(len(in_eq)):
         st = from_list_to_str('', in_eq[n])
-        # string.append(st+'>0')
         domain.append(st)
-    
-    # domain = solve(string, var_list)
             
     return domain
 
@@ -411,16 +423,18 @@ def diff(input, var):
     funcs_list = ['sin', 'cos', 'tan']
     output = []
 
-    if is_gathered(input):
+    if is_gathered(input):                  # if it is polynomial
         for t in range(len(input)):
             temp = diff(input[t], var)
 
             if temp != [0]:
-                if is_gathered(temp) and len(temp) == 1:
-                    temp = temp[0]
-                output.append(temp)
+                if not output:
+                    output = deepcopy(temp)
+                else:
+                    output = plus(output, temp)
+                # output.append(temp)
 
-    else:            
+    else:
         for n in range(int(len(input)/2)):
 
             input_rep = deepcopy(input)
@@ -454,8 +468,6 @@ def diff(input, var):
                             input_rep[idx+1] = -2
 
                         temp = diff(input[idx][1], var)
-                        if is_gathered(temp) and len(temp) == 1:
-                            temp = temp[0]
                         
                         if temp == [0]:
                             continue
@@ -471,9 +483,6 @@ def diff(input, var):
 
                         temp = diff([1, input_rep[idx], 1], var)
 
-                        if is_gathered(temp) and len(temp) == 1:
-                            temp = temp[0]
-
                         input_rep[0] *= temp[0]
                         if input_rep[0] == 0:
                             continue
@@ -485,13 +494,8 @@ def diff(input, var):
 
                 elif input[idx][0] == 'log':
                     if input_rep[idx+1] == 1:
-                        input_rep.append(input_rep[idx][1])
-                        input_rep.append(-1)
-
-                        temp = diff([1, input_rep[idx][1], 1], var)
-
-                        if is_gathered(temp) and len(temp) == 1:
-                            temp = temp[0]
+                        inside = deepcopy(input_rep[idx][1])
+                        temp = diff(input_rep[idx][1], var)
                         
                         if temp == [0]:
                             continue
@@ -508,6 +512,9 @@ def diff(input, var):
                             input_rep[idx+1] = -1
                             input_rep[idx] = ['log', input_rep[idx][1], [e]]
 
+                        input_rep = many_div([], input_rep, inside)
+                        input_rep = double_bracket(input_rep)
+
                         output.append(input_rep)
                     
                     else:
@@ -515,9 +522,6 @@ def diff(input, var):
                         input_rep[idx+1] -= 1
 
                         temp = diff([1, input_rep[idx], 1], var)
-
-                        if is_gathered(temp) and len(temp) == 1:
-                            temp = temp[0]
 
                         input_rep[0] *= temp[0]
                         if input_rep[0] == 0:
@@ -530,9 +534,6 @@ def diff(input, var):
 
                 else:
                     temp = diff(input[idx], var)
-
-                    if is_gathered(temp) and len(temp) == 1:
-                        temp = temp[0]
 
                     if temp == [0]:
                         continue
@@ -561,14 +562,10 @@ def diff(input, var):
                         input_rep.append(1)
                 
                 temp = diff(input[idx+1], var)
-
-                if is_gathered(temp) and len(temp) == 1:
-                    temp = temp[0]
                 
                 if temp == [0]:
                     continue
 
-                # for m in range(1, len(temp)):
                 input_rep.append(temp)
                 input_rep.append(1)
 
@@ -576,5 +573,7 @@ def diff(input, var):
 
     if not output:
         output = [0]
+    
+    output = double_bracket(output)
 
     return output

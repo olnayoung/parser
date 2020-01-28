@@ -5,7 +5,6 @@ from calculator import change_x_to_num
 from calculator import plot_2D
 from calculator import plot_3D
 from calculator import sigma
-from calculator import differentiable
 from extra_funcs import is_gathered
 from extra_funcs import many_mul
 from extra_funcs import multiply

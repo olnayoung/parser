@@ -13,7 +13,6 @@ from extra_funcs import is_digit
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
-from matplotlib.figure import Figure
 from extra_funcs import from_list_to_str
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
@@ -34,19 +33,17 @@ class App(QMainWindow):
         self.setGeometry(self.left, self.top, self.width, self.height)
 
         # # get variable
-        self.v_label = QLabel(self)
+        self.v_label = QLabel('Variable', self)
         self.v_label.move(20, 10)
-        self.v_label.setText('Variable')
     
         self.variable = QLineEdit(self)
         self.variable.move(20, 50)
         self.variable.resize(self.width/2 - 200, 30)
 
         # get equation
-        self.e_label = QLabel(self)
+        self.e_label = QLabel('Equation', self)
         self.e_label.move(20, 90)
         self.e_label.resize(110, 30)
-        self.e_label.setText('Equation')
 
         self.equation = QLineEdit(self)
         self.equation.move(20, 130)
@@ -89,10 +86,9 @@ class App(QMainWindow):
         self.button.clicked.connect(self.on_click_eq)
 
         # value
-        self.value_label = QLabel(self)
+        self.value_label = QLabel('Values for variables', self)
         self.value_label.move(int(self.width/2), 10)
         self.value_label.resize(245, 30)
-        self.value_label.setText('Values for variables')
 
         self.va_label = QLabel(self)
         self.va_label.move(int(self.width/2) + 245, 10)
@@ -109,10 +105,9 @@ class App(QMainWindow):
         self.button1.clicked.connect(self.on_click_value)
 
         # Differentiable
-        self.differentiable_label = QLabel(self)
+        self.differentiable_label = QLabel('Differentiable', self)
         self.differentiable_label.move(int(self.width/2), 90)
         self.differentiable_label.resize(310, 30)
-        self.differentiable_label.setText('Differentiable')
 
         self.differentiable = QLineEdit(self)
         self.differentiable.move(int(self.width/2), 130)
@@ -180,8 +175,9 @@ class App(QMainWindow):
             self.domain_title_label.setText('Domain')
             self.domain_label.setText(str_domain)
 
-        if len(self.var_list) < 3 and self.eq[0:3] != 'sig':
-            self.open_new_dialog(self.eq, self.diff, self.domain, self.in_domain, self.var_list)
+        if not is_digit(self.eq):
+            if len(self.var_list) < 3 and self.eq[0:3] != 'sig':
+                self.open_new_dialog(self.eq, self.diff, self.domain, self.in_domain, self.var_list)
 
         if not self.diff:
             self.a_label.setText('Answer is: ' + str(ans))
@@ -191,7 +187,6 @@ class App(QMainWindow):
         diff_ans = ''
         for n in range(len(self.diff)):
             diff_ans = diff_ans + 'Differentiated by ' + self.var_list[n] + ': ' + self.diff[n] + '\n'
-            print(self.diff[n])
 
         self.da_label.setText(diff_ans)
 
@@ -225,7 +220,10 @@ class App(QMainWindow):
         string = self.differentiable.text()
 
         if self.var_list:
-            if len(self.var_list) == 1 and self.eq[0:3] != 'sig':
+            if self.eq[0:3] == 'sig':
+                self.dt_label.setText('It is sigma')
+
+            elif len(self.var_list) == 1:
                 differentiable = differentiable_1D(self.eq, self.diff, self.domain, self.in_domain, string, self.var_list)
                 if differentiable == 1:
                     self.dt_label.setText('Differentiable at ' + string)
@@ -234,7 +232,7 @@ class App(QMainWindow):
                 else:
                     self.dt_label.setText(differentiable)
 
-            elif len(self.var_list) == 2 and self.eq[0:3] != 'sig':
+            elif len(self.var_list) == 2:
                 [dx, dy] =  differentiable_2D(self.eq, self.diff, self.domain, self.in_domain, string, self.var_list)
                 if dx == 1 and dy == 1:
                     self.dt_label.setText('Differentiable at direction of ' + self.var_list[0] + ' and ' + self.var_list[1] + ' at ' + string)
@@ -277,21 +275,17 @@ class NewWindow(QDialog):
         self.layout.addWidget(self.toolbar, 0, 0)
 
         if len(self.var_list) == 1 or len(self.var_list) == 2:
-            self.range_label = QLabel(self)
+            self.range_label = QLabel('Range   ', self)
             self.range_label.setFixedSize(110, 30)
-            self.range_label.setText('Range   ')
 
-            self.range_x_label = QLabel(self)
+            self.range_x_label = QLabel(self.var_list[0] + ':', self)
             self.range_x_label.setFixedSize(30, 30)
-            self.range_x_label.setText(self.var_list[0] + ':')
 
             self.x_value1 = QLineEdit(self)
             self.x_value1.setFixedSize(80, 30)
-            # self.x_value1.setStyleSheet("color: blue")
 
-            self._label = QLabel(self)
+            self._label = QLabel(' ~ ', self)
             self._label.setFixedSize(40, 30)
-            self._label.setText(' ~ ')
 
             self.x_value2 = QLineEdit(self)
             self.x_value2.setFixedSize(80, 30)
@@ -308,16 +302,14 @@ class NewWindow(QDialog):
             self.range.addWidget(self.x_value2, Qt.AlignLeft)
 
             if len(self.var_list) == 2:
-                self.range_y_label = QLabel(self)
+                self.range_y_label = QLabel(', ' + self.var_list[1] + ' : ', self)
                 self.range_y_label.setFixedSize(50, 30)
-                self.range_y_label.setText(', ' + self.var_list[1] + ' : ')
 
                 self.y_value1 = QLineEdit(self)
                 self.y_value1.setFixedSize(80, 30)
 
-                self.y_label = QLabel(self)
+                self.y_label = QLabel(' ~ ', self)
                 self.y_label.setFixedSize(40, 30)
-                self.y_label.setText(' ~ ')
 
                 self.y_value2 = QLineEdit(self)
                 self.y_value2.setFixedSize(80, 30)
@@ -407,7 +399,6 @@ class NewWindow(QDialog):
 
         for n in range(len(ipt)):
             self.ax.plot(ipt[n], opt[n], 'b')
-        # plt.axis('equal')
 
     def plot_3D_graph(self, equation):
         self.ax.set_xlabel(self.var_list[0])

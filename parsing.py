@@ -14,6 +14,7 @@ from extra_funcs import plus
 from extra_funcs import minus
 from extra_funcs import power
 from extra_funcs import many_div
+from extra_funcs import double_bracket
 from copy import deepcopy
 
 NUMBER = [float, int]
@@ -122,8 +123,9 @@ class TermTail(object):
         elif self.op is '/':
             left = many_div([], left, sequence)
             
-        if is_gathered(left) and len(left[0]) == 1:
-            left = left[0]
+        left = double_bracket(left)
+        # if is_gathered(left) and len(left[0]) == 1:
+        #     left = left[0]
 
         if self.termTail is None:
             return left
@@ -164,8 +166,7 @@ class SequenceTail(object):
             else:
                 left = power(left, factor)
 
-            if is_gathered(left) and len(left) == 1:
-                left = left[0]
+            left = double_bracket(left)
         
         if self.sequenceTail is None:
             return left
@@ -214,7 +215,6 @@ class Factor(Expr):
             if temp not in in_eq:
                 if not is_digit(temp[0]) or len(temp) > 1:
                     in_eq.append(temp)
-                    eq.append(temp)
 
             if self.base == None:
                 base = [e]
@@ -224,13 +224,9 @@ class Factor(Expr):
                 if base not in in_eq:
                     if not is_digit(base[0]) or len(base) > 1:
                         in_eq.append(base)
-                        eq.append(base)
-                        eq.append(plus(base, [1]))
                 if base not in eq:
-                    b = deepcopy(base)
-                    b = [b]
-                    b.append([-1])
-                    eq.append(b)
+                    if not is_digit(base[0]) or len(base) > 1:
+                        eq.append(plus(base, [-1]))
 
             if is_digit(temp[0]) and len(temp) == 1 and is_digit(base[0]) and len(base) == 1:
                 return [log(temp[0], base[0])]
@@ -320,9 +316,6 @@ def takeSequenceTail(tokens):
         factor = takeFactor(tokens)
         sequenceTail = takeSequenceTail(tokens)
         return SequenceTail(op, factor, sequenceTail)
-
-    # elif tokens.isType('(') or tokens.getItem() in var_list or is_digit(tokens.getItem()):
-    #     raise Exception("Unexpected token: %s" % (tokens.getItem()))
 
 def takeFactor(tokens):
     funcs_list = ['sin', 'cos', 'tan']
