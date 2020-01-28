@@ -324,12 +324,14 @@ def sigma(k, equation, start, end, var_list = None):
             string = k + '=' + str(n)
             ans += float(change_x_to_num(eq, [k], string))
 
-    return [ans, 0, 0, 0]
+    return [str(ans), [], [], []]
 
 
 def check_domain(domain, in_domain, var_list, input):
-    domain = eq_domain(domain, var_list)
-    in_domain = in_eq_domain(in_domain, var_list)
+    if domain:
+        domain = eq_domain(domain, var_list)
+    if in_domain:
+        in_domain = in_eq_domain(in_domain, var_list)
 
     for n in range(len(domain)):
         opt = change_x_to_num(domain[n], var_list, input)

@@ -23,19 +23,17 @@ class App(QMainWindow):
     def __init__(self):
         super().__init__()
         self.title = 'title'
-        self.left = 1500
-        self.top = 700
+        self.left = 1200
+        self.top = 500
         self.width = 2000
-        self.height = 700
-        self.im_width = 550
-        self.im_height = 550
+        self.height = 1000
         self.initUI()
     
     def initUI(self):
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
 
-        # get variable
+        # # get variable
         self.v_label = QLabel(self)
         self.v_label.move(20, 10)
         self.v_label.setText('Variable')
@@ -58,28 +56,32 @@ class App(QMainWindow):
         # show equation
         self.a_label = QLabel(self)
         self.a_label.move(20, 170)
-        self.a_label.resize(self.width, 30)
+        self.a_label.resize(self.width, 120)
+        self.a_label.setAlignment(Qt.AlignTop)
+        self.a_label.setWordWrap(True)
 
         # differential
         self.d_label = QLabel(self)
-        self.d_label.move(20, 430)
+        self.d_label.move(20, 610)
         self.d_label.resize(self.width, 30)
 
         self.da_label = QLabel(self)
-        self.da_label.move(50, 460)
-        self.da_label.resize(self.width, 100)
+        self.da_label.move(50, 640)
+        self.da_label.resize(self.width, 230)
         self.da_label.setAlignment(Qt.AlignTop)
+        self.da_label.setWordWrap(True)
 
         # domain
         self.domain_title_label = QLabel(self)
-        self.domain_title_label.move(20, 230)
+        self.domain_title_label.move(20, 330)
         self.domain_title_label.resize(400, 30)
 
         self.domain_label = QLabel(self)
-        self.domain_label.move(50, 260)
-        self.domain_label.resize(400, 150)
-        # self.domain_label.resize(self.domain_label.sizeHint())
+        self.domain_label.move(50, 360)
+        self.domain_label.resize(self.width/2, 200)
         self.domain_label.setAlignment(Qt.AlignTop)
+        self.domain_label.setWordWrap(True)
+        self.domain_label.setScaledContents(True)
 
         # Button for equation
         self.button = QPushButton('click', self)
@@ -189,6 +191,7 @@ class App(QMainWindow):
         diff_ans = ''
         for n in range(len(self.diff)):
             diff_ans = diff_ans + 'Differentiated by ' + self.var_list[n] + ': ' + self.diff[n] + '\n'
+            print(self.diff[n])
 
         self.da_label.setText(diff_ans)
 
@@ -386,7 +389,7 @@ class NewWindow(QDialog):
         else:
             self.tt_label.setText('  Write ONLY digits')
             return 0
-
+ 
         if len(self.var_list) == 2:
             self.ran_y[0] = float(self.y_value1.text())
             self.ran_y[1] = float(self.y_value2.text())
