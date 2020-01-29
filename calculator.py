@@ -6,7 +6,7 @@ from extra_funcs import eq_domain
 from extra_funcs import diff
 from extra_funcs import is_digit
 from extra_funcs import is_same
-from math import nan
+from math import nan, e
 from copy import deepcopy
 
 
@@ -124,7 +124,7 @@ def plot_2D(eq, domain, in_domain, var_list, ran, interval):
     return [ipts, opts]
 
 
-def plot_3D(eq, domain, in_domain, var_list, ran1, ran2, interval):
+def plot_3D(eq, domain, in_domain, var_list, ran1, ran2, interval_x, interval_y):
     var1 = var_list[0]
     var2 = var_list[1]
 
@@ -132,11 +132,11 @@ def plot_3D(eq, domain, in_domain, var_list, ran1, ran2, interval):
     ipt2 = []
     opt = []
 
-    for n in range(int((ran1[1]-ran1[0])/interval)):
-        value1 = ran1[0] + interval * n
+    for n in range(int((ran1[1]-ran1[0])/interval_x)):
+        value1 = ran1[0] + interval_x * n
 
-        for m in range(int((ran2[1]-ran2[0])/interval)):
-            value2 = ran2[0] + interval * m
+        for m in range(int((ran2[1]-ran2[0])/interval_y)):
+            value2 = ran2[0] + interval_y * m
 
             if check_domain(domain, in_domain, var_list, var1+'='+str(value1) +','+ var2+'='+str(value2)):
                 ans = change_x_to_num(eq, var_list, var1+'='+str(value1) +','+ var2+'='+str(value2))
@@ -336,12 +336,22 @@ def check_domain(domain, in_domain, var_list, input):
 
     for n in range(len(domain)):
         opt = change_x_to_num(domain[n], var_list, input)
-        if opt[0] == '*' or float(opt) == 0:
+        # if opt[0] == '*':
+        #     return 0
+        if is_digit(opt):
+            if float(opt) == 0:
+                return 0
+        else:
             return 0
     
     for n in range(len(in_domain)):
         opt = change_x_to_num(in_domain[n], var_list, input)
-        if opt[0] == '*' or float(opt) < 0:
+        # if opt[0] == '*':
+        #     return 0
+        if is_digit(opt):
+            if float(opt) == 0:
+                return 0
+        else:
             return 0
 
     return 1

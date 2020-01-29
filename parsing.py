@@ -6,7 +6,7 @@
 # S' := '^' F S'
 # F  := '(' E ')' | '-' F | int | log F | sin F | ...
 
-from math import log, sin, cos, tan, pi, e, inf
+from math import log, sin, cos, tan, pi, e, nan
 from extra_funcs import is_digit
 from extra_funcs import is_gathered
 from extra_funcs import many_mul
@@ -226,17 +226,24 @@ class Factor(Expr):
                         in_eq.append(base)
                 if base not in eq:
                     if not is_digit(base[0]) or len(base) > 1:
-                        eq.append(plus(base, [-1]))
+                        eq.append(plus(deepcopy(base), [-1]))
 
             if is_digit(temp[0]) and len(temp) == 1 and is_digit(base[0]) and len(base) == 1:
                 return [log(temp[0], base[0])]
             else:
                 if not is_gathered(temp) and len(temp) == 3:
-                    if [temp[0], temp[1], 1] == base:
-                        return many_mul([], [1], temp[2])
+                    if is_digit(base[0]) and len(base) == 1:
+                        if [temp[0], temp[1], 1] == [1, base, 1]:
+                            return many_mul([], [1], [temp[2]])
+                        else:
+                            # return [1, ['log', temp, base], 1]
+                            return many_mul([], [1, ['log', [temp[0], temp[1], 1], base], 1], [temp[2]])
                     else:
-                        return [1, ['log', temp, base], 1]
-                        # return many_mul([], [1, ['log', [temp[0], temp[1], 1], base], 1], [temp[2]])
+                        if [temp[0], temp[1], 1] == base:
+                            return many_mul([], [1], [temp[2]])
+                        else:
+                            # return [1, ['log', temp, base], 1]
+                            return many_mul([], [1, ['log', [temp[0], temp[1], 1], base], 1], [temp[2]])
                 else:
                     return [1, ['log', temp, base], 1]
         

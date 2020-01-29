@@ -21,7 +21,7 @@ from scipy.interpolate import griddata
 class App(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.title = 'title'
+        self.title = 'Calculator'
         self.left = 1200
         self.top = 500
         self.width = 2000
@@ -262,7 +262,9 @@ class NewWindow(QDialog):
 
         self.ran_x = [-10, 10]
         self.ran_y = [-10, 10]
-        self.interval = (self.ran_x[1] - self.ran_x[0]) / 100
+        self.n_interval = 100
+        self.interval_x = (self.ran_x[1] - self.ran_x[0]) / self.n_interval
+        self.interval_y = (self.ran_y[1] - self.ran_y[0]) / self.n_interval
 
         self.figure = plt.figure()
         self.canvas = FigureCanvas(self.figure)
@@ -271,7 +273,7 @@ class NewWindow(QDialog):
 
         # set the layout
         self.layout = QGridLayout(self)
-        self.setGeometry(1500, 700, 2000, 1000)
+        self.setGeometry(1200, 500, 2000, 1000)
         self.layout.addWidget(self.toolbar, 0, 0)
 
         if len(self.var_list) == 1 or len(self.var_list) == 2:
@@ -378,13 +380,19 @@ class NewWindow(QDialog):
         if is_digit(self.x_value1.text()) and is_digit(self.x_value2.text()):
             self.ran_x[0] = float(self.x_value1.text())
             self.ran_x[1] = float(self.x_value2.text())
+            self.interval_x = (self.ran_x[1] - self.ran_x[0]) / self.n_interval
         else:
             self.tt_label.setText('  Write ONLY digits')
             return 0
  
         if len(self.var_list) == 2:
-            self.ran_y[0] = float(self.y_value1.text())
-            self.ran_y[1] = float(self.y_value2.text())
+            if is_digit(self.y_value1.text()) and is_digit(self.y_value2.text()):
+                self.ran_y[0] = float(self.y_value1.text())
+                self.ran_y[1] = float(self.y_value2.text())
+                self.interval_y = (self.ran_y[1] - self.ran_y[0]) / self.n_interval
+            else:
+                self.tt_label.setText('  Write ONLY digits')
+                return 0
 
         if self.ran_x[0] >= self.ran_x[1] or self.ran_y[0] >= self.ran_y[1]:
             self.tt_label.setText('  The Right value must be bigger than the Left value')
@@ -395,7 +403,7 @@ class NewWindow(QDialog):
     def plot_2D_graph(self, equation):
         plt.grid()
         self.ax.set_xlabel(self.var_list[0])
-        [ipt, opt] = plot_2D(equation, self.domain, self.in_domain, self.var_list, self.ran_x, self.interval)
+        [ipt, opt] = plot_2D(equation, self.domain, self.in_domain, self.var_list, self.ran_x, self.interval_x)
 
         for n in range(len(ipt)):
             self.ax.plot(ipt[n], opt[n], 'b')
@@ -403,7 +411,7 @@ class NewWindow(QDialog):
     def plot_3D_graph(self, equation):
         self.ax.set_xlabel(self.var_list[0])
         self.ax.set_ylabel(self.var_list[1])
-        [ipt1, ipt2, opt] = plot_3D(equation, self.domain, self.in_domain, self.var_list, self.ran_x, self.ran_y, self.interval)
+        [ipt1, ipt2, opt] = plot_3D(equation, self.domain, self.in_domain, self.var_list, self.ran_x, self.ran_y, self.interval_x, self.interval_y)
 
         xi = np.linspace(min(ipt1), max(ipt1))
         yi = np.linspace(min(ipt2), max(ipt2))

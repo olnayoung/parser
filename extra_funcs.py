@@ -321,7 +321,7 @@ def from_list_to_str(output, input):
             else:
                 if n > 0:
                     if input[n][0] > 0:
-                        output += '+'
+                        output += ' + '
                 
                 output = list_2_str(output, input[n])
 
@@ -510,7 +510,7 @@ def diff(input, var):
 
                         else:
                             input_rep[idx+1] = -1
-                            input_rep[idx] = ['log', input_rep[idx][1], [e]]
+                            input_rep[idx] = ['log', input_rep[idx][2], [e]]
 
                         input_rep = many_div([], input_rep, inside)
                         input_rep = double_bracket(input_rep)
@@ -565,9 +565,9 @@ def diff(input, var):
                 
                 if temp == [0]:
                     continue
-
-                input_rep.append(temp)
-                input_rep.append(1)
+                elif temp != [1]:
+                    input_rep.append(temp)
+                    input_rep.append(1)
 
                 output.append(input_rep)
 
