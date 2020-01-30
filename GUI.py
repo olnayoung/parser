@@ -152,7 +152,6 @@ class App(QMainWindow):
         self.var_list.sort()
 
         ans, self.diff, self.domain, self.in_domain = calcul(self.eq, self.var_list)
-        print(ans)
         self.eq = ans
         
         if ans == 'Error':

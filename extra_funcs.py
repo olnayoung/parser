@@ -80,21 +80,31 @@ def mul_idx(one, additional, var_list):
     for n in range(int(len(one)/2)):
         idx = 2*n+1
 
-        if isinstance(additional, list):
-            pri_1 = priority[one[idx][0]]
+        if isinstance(one[idx], list):
+            if is_digit(one[idx][0]):
+                pri_1 = len(priority)
+            else:
+                pri_1 = priority[one[idx][0]]
         else:
             pri_1 = priority[one[idx]]
 
         if isinstance(additional, list):
-            return len(one)
-            # pri_2 = priority[additional[0]]
+            if is_digit(additional[0]):
+                pri_2 = len(priority)
+            else:
+                pri_2 = priority[additional[0]]
         else:
             pri_2 = priority[additional]
 
         if pri_1 > pri_2:
             return idx
+
         elif pri_1 == pri_2:
-            if pri_1 == priority['log']:
+            if pri_1 == len(priority):
+                if one[idx][0] > additional[0]:
+                    return idx
+
+            elif pri_1 == priority['log']:
                 if one[idx][2] == additional[2]:
                     if multi_idx(one[idx][1], additional[1], var_list) == 0:
                         return idx
@@ -138,9 +148,13 @@ def plus_idx(many, additional, var_list):
                 continue
             else:
                 return len(many)
-            # pri_1 = priority[many[n][1][0]]
+
         else:
-            pri_1 = priority[many[n][1]]
+            if isinstance(many[n][1], list):
+                pri_1 = priority[many[n][1][0]]
+            else:
+                pri_1 = priority[many[n][1]]
+            continue
 
         if is_gathered(additional[1]):
             a = multi_idx(many[n][1], additional[1], var_list)
@@ -150,49 +164,56 @@ def plus_idx(many, additional, var_list):
                 continue
             else:
                 return len(many)
-            # pri_2 = priority[additional[1][0]]
+        
         else:
-            pri_2 = priority[additional[1]]
+            if isinstance(additional[1], list):
+                pri_2 = priority[additional[1][0]]
+            else:
+                pri_2 = priority[additional[1]]
 
         if pri_1 == pri_2:
             if pri_1 < priority['sin']:
                 if plus_idx(many[n][2], additional[2], var_list) == 0:
                     return n
+                else:
+                    continue
 
             elif pri_1 == priority['log']:
-                if many[n][2] == additional[2]:
-                    a = multi_idx(many[n][1][1], additional[1][1], var_list)
-                    if a == 0:
-                        return n
-                    elif a == 2:
-                        continue
-                    else:
-                        return len(many)
+                if many[n][1][2] == additional[1][2]:
+                    first = many[n][1][1]
+                    second = additional[1][1]
+
                 else:
-                    a = multi_idx(many[n][1][2], additional[1][2], var_list)
-                    if a == 0:
-                        return n
-                    elif a == 2:
-                        continue
-                    else:
-                        return len(many)
+                    first = many[n][1][2]
+                    second = additional[1][2]
+
             else:
-                a = multi_idx(many[n][1][1], additional[1][1], var_list)
-                if a == 0:
-                    return n
-                elif a == 2:
-                    continue
-                else:
-                    return len(many)
+                first = many[n][1][1]
+                second = additional[1][1]
+
+            a = multi_idx(first, second, var_list)
+            if a == 0:
+                return n
+            elif a == 2:
+                continue
+            else:
+                return len(many)
 
         elif pri_1 > pri_2:
             return n
     
     return len(many)
 
-def multi_idx(many, additional, var_list):
+def multi_idx(many, additional, var_list):      # return 0: append prev, return 1: append after
     if many == additional:
         return 2
+
+    if not is_gathered(many) and not is_gathered(additional):
+        a = mul_idx(many, additional[1], var_list)
+        if a == len(many):
+            return 1
+        else:
+            return 0
 
     if not is_gathered(many):
         many = [many]
