@@ -31,7 +31,7 @@ def calcul(eq, var_list):
 
             eq_diff = []
             for n in range(len(var_list)):
-                eq_diff.append(from_list_to_str('', diff(ans, var_list[n])))
+                eq_diff.append(from_list_to_str('', diff(ans, var_list[n], var_list)))
 
             return [from_list_to_str('', ans), eq_diff, domain, in_domain]
 

@@ -17,9 +17,11 @@ from extra_funcs import minus
 from extra_funcs import in_eq_domain
 from extra_funcs import eq_domain
 from extra_funcs import diff
+from extra_funcs import mul_idx
+from extra_funcs import plus_idx
 
-print(calcul('log(x^2,y),', ['x', 'y']))
-# print(differentiable('x', 'x^(1/2)', [], [], 'x=0'))
+print(mul_idx([1,'x',1,'z',1], 'y', ['x','y','z']))
+# print(plus_idx([[1,'y',1]], [1,'x',1], ['x','y']))
 
 # n = 0
 # correct = 0

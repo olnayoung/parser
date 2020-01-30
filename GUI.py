@@ -150,6 +150,7 @@ class App(QMainWindow):
                 self.var_list.append(temp[n])
 
         ans, self.diff, self.domain, self.in_domain = calcul(self.eq, self.var_list)
+        print(ans)
         self.eq = ans
         
         if ans == 'Error':
@@ -399,6 +400,10 @@ class NewWindow(QDialog):
             return 0
         
         self.plot()
+
+    # def get_interval(self):
+
+    #     self.plot()
 
     def plot_2D_graph(self, equation):
         plt.grid()

@@ -47,9 +47,9 @@ class ExprTail(object):
         eval_t = self.term.eval()
         
         if self.op is '+':
-            left = plus(left, eval_t)
+            left = plus(left, eval_t, var_list)
         elif self.op is '-':
-            left = minus(left, eval_t)
+            left = minus(left, eval_t, var_list)
 
         if self.exprTail is None:
             return left
@@ -118,10 +118,10 @@ class TermTail(object):
         sequence = self.sequence.eval()
 
         if self.op is '*':
-            left = many_mul([], left, sequence)
+            left = many_mul([], left, sequence, var_list)
 
         elif self.op is '/':
-            left = many_div([], left, sequence)
+            left = many_div([], left, sequence, var_list)
             
         left = double_bracket(left)
         # if is_gathered(left) and len(left[0]) == 1:
@@ -162,9 +162,9 @@ class SequenceTail(object):
 
         if self.op == '^':
             if factor == [2]:
-                left = many_mul([], left, left)
+                left = many_mul([], left, left, var_list)
             else:
-                left = power(left, factor)
+                left = power(left, factor, var_list)
 
             left = double_bracket(left)
         
@@ -197,7 +197,7 @@ class Factor(Expr):
             temp = temp[0]
 
         if self.sign is '-':
-            temp = many_mul([], [-1], temp)
+            temp = many_mul([], [-1], temp, var_list)
             return temp
 
         elif self.sign in self.funcs_list:
@@ -226,7 +226,7 @@ class Factor(Expr):
                         in_eq.append(base)
                 if base not in eq:
                     if not is_digit(base[0]) or len(base) > 1:
-                        eq.append(plus(deepcopy(base), [-1]))
+                        eq.append(plus(deepcopy(base), [-1], var_list))
 
             if is_digit(temp[0]) and len(temp) == 1 and is_digit(base[0]) and len(base) == 1:
                 return [log(temp[0], base[0])]
@@ -234,16 +234,16 @@ class Factor(Expr):
                 if not is_gathered(temp) and len(temp) == 3:
                     if is_digit(base[0]) and len(base) == 1:
                         if [temp[0], temp[1], 1] == [1, base, 1]:
-                            return many_mul([], [1], [temp[2]])
+                            return many_mul([], [1], [temp[2]], var_list)
                         else:
                             # return [1, ['log', temp, base], 1]
-                            return many_mul([], [1, ['log', [temp[0], temp[1], 1], base], 1], [temp[2]])
+                            return many_mul([], [1, ['log', [temp[0], temp[1], 1], base], 1], [temp[2]], var_list)
                     else:
                         if [temp[0], temp[1], 1] == base:
-                            return many_mul([], [1], [temp[2]])
+                            return many_mul([], [1], [temp[2]], var_list)
                         else:
                             # return [1, ['log', temp, base], 1]
-                            return many_mul([], [1, ['log', [temp[0], temp[1], 1], base], 1], [temp[2]])
+                            return many_mul([], [1, ['log', [temp[0], temp[1], 1], base], 1], [temp[2]], var_list)
                 else:
                     return [1, ['log', temp, base], 1]
         
