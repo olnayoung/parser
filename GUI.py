@@ -149,6 +149,8 @@ class App(QMainWindow):
                     return 0
                 self.var_list.append(temp[n])
 
+        self.var_list.sort()
+
         ans, self.diff, self.domain, self.in_domain = calcul(self.eq, self.var_list)
         print(ans)
         self.eq = ans
