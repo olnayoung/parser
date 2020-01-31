@@ -30,6 +30,14 @@ def is_same(values, epsilon):
 
     return 1
 
+def delete_zero(left):
+    delete = []
+    for n in range(len(left)):
+        if left[n][0] == 0:
+            delete.append(n)
+
+    return delete
+
 def double_bracket(temp):
     if is_gathered(temp) and len(temp) == 1:
         temp = temp[0]
@@ -230,48 +238,36 @@ def multi_idx(many, additional, var_list):      # return 0: append prev, return 
                     return 1
                 else:
                     return 0
-                # a = multi_idx(many[n], additional[n], var_list)
-                # if a == len(many[n]):
-                #     return 1
-                # else:
-                #     return 0
 
     return 1
 
 
-def plus_sep(left, sequence, delete, var_list):
+def plus_sep(left, sequence, var_list):
     check = 0
     for m in range(len(left)):
         if sequence[1:] == left[m][1:]:
             left[m][0] += sequence[0]
             check = 1
-
-        if left[m][0] == 0:
-            delete.append(m)
-
-            continue
     
     if not check and sequence[0] != 0:
         num = plus_idx(left, sequence, var_list)
         left.insert(num, sequence)
-        # left.append(sequence)
 
-    return left, delete
+    return left
 
 
 def plus(left, sequence, var_list):
-    delete = []
-
     if not is_gathered(left):
         left = [left]
 
     if not is_gathered(sequence):
-        left, delete = plus_sep(left, sequence, delete, var_list)
+        left = plus_sep(left, sequence, var_list)
     
     else:
         for n in range(len(sequence)):
-            left, delete = plus_sep(left, sequence[n], delete, var_list)
+            left = plus_sep(left, sequence[n], var_list)
 
+    delete = delete_zero(left)
     while delete:
         t = delete.pop()
         del left[t]
@@ -283,39 +279,32 @@ def plus(left, sequence, var_list):
 
     return left
 
-def minus_sep(left, sequence, delete, var_list):
+def minus_sep(left, sequence, var_list):
     check = 0
     for m in range(len(left)):
         if sequence[1:] == left[m][1:]:
             left[m][0] -= sequence[0]
             check = 1
-
-        if left[m][0] == 0:
-            delete.append(m)
-            
-            continue
     
     if not check:
         sequence[0] *= -1
-        # left.append(sequence)
         num = plus_idx(left, sequence, var_list)
         left.insert(num, sequence)
 
-    return left, delete
+    return left
 
 def minus(left, sequence, var_list):
-    delete = []
-
     if not is_gathered(left):
         left = [left]
 
     if not is_gathered(sequence):
-        left, delete = minus_sep(left, sequence, delete, var_list)
+        left = minus_sep(left, sequence, var_list)
     
     else:
         for n in range(len(sequence)):
-            left, delete = minus_sep(left, sequence[n], delete, var_list)
+            left = minus_sep(left, sequence[n], var_list)
 
+    delete = delete_zero(left)
     while delete:
         t = delete.pop()
         del left[t]
@@ -615,7 +604,7 @@ def add_domain(eq, in_eq, domain_1, domain_2):
 
 def diff(input, var, var_list):
     funcs_list = ['sin', 'cos', 'tan']
-    output = []
+    output = [0]
 
     if is_gathered(input):                  # if it is polynomial
         for t in range(len(input)):
@@ -626,7 +615,6 @@ def diff(input, var, var_list):
                     output = deepcopy(temp)
                 else:
                     output = plus(output, temp, var_list)
-                # output.append(temp)
 
     else:
         for n in range(int(len(input)/2)):
@@ -647,7 +635,7 @@ def diff(input, var, var_list):
                     input_rep[idx+1] = minus(deepcopy(input_rep[idx+1]), [1], var_list)
                     input_rep = many_mul([], input_rep, input[idx+1], var_list)
 
-                output.append(input_rep)
+                output = plus(deepcopy(output), input_rep, var_list)
 
             elif isinstance(input[idx], list) and len(input[idx]) > 1:
                 if input[idx][0] in funcs_list:
@@ -662,6 +650,11 @@ def diff(input, var, var_list):
                             input_rep[idx+1] = -2
 
                         temp = diff(input[idx][1], var, var_list)
+                        follwer = deepcopy(input_rep[idx:idx+2])
+                        follwer.insert(0, 1)
+                        del input_rep[idx]
+                        del input_rep[idx]
+                        input_rep = many_mul([], deepcopy(input_rep), follwer, var_list)
                         
                         if temp == [0]:
                             continue
@@ -672,6 +665,7 @@ def diff(input, var, var_list):
                         save_idx = deepcopy(input_rep[idx])
                         if is_digit(save_idx):
                             save_idx = [save_idx]
+
                         save_idx_1 = deepcopy(input_rep[idx+1])
                         if is_digit(save_idx_1):
                             save_idx_1 = [save_idx_1]
@@ -680,30 +674,24 @@ def diff(input, var, var_list):
                         input_rep = many_mul([], deepcopy(input_rep), save_idx_1, var_list)
 
                         temp = diff([1, save_idx, 1], var, var_list)
-
-                        # input_rep[0] *= temp[0]
-                        # if input_rep[0] == 0:
-                        #     continue
                         input_rep = many_mul([], deepcopy(input_rep), temp, var_list)
-                        # for m in range(1, len(temp)):
-                        #     input_rep = many_mul([], deepcopy(input_rep), temp[m], var_list)
-                        #     input_rep.append(temp[m])
+
                         if input_rep[0] == 0:
                             continue
 
-                    output.append(input_rep)
-                    # output = many_mul([], deepcopy(output), input_rep, var_list)
+                    output = plus(deepcopy(output), input_rep, var_list)
 
                 elif input[idx][0] == 'log':
                     if input_rep[idx+1] == 1:
                         inside = deepcopy(input_rep[idx][1])
                         temp = diff(input_rep[idx][1], var, var_list)
+                        input_rep = many_mul([], deepcopy(input_rep), temp, var_list)
                         
-                        if temp == [0]:
-                            continue
-                        elif temp != [1]:
-                            input_rep.append(temp)
-                            input_rep.append(1)
+                        # if temp == [0]:
+                        #     continue
+                        # elif temp != [1]:
+                        #     input_rep.append(temp)
+                        #     input_rep.append(1)
 
                         if len(input_rep[idx][2]) == 1 and is_digit(input_rep[idx][2][0]):
                             input_rep[0] *= (log(input_rep[idx][2][0], e) ** -1)
@@ -717,22 +705,23 @@ def diff(input, var, var_list):
                         input_rep = many_div([], input_rep, inside, var_list)
                         input_rep = double_bracket(input_rep)
 
-                        output.append(input_rep)
+                        output = plus(deepcopy(output), input_rep, var_list)
                     
                     else:
                         input_rep[0] *= input_rep[idx+1]
                         input_rep[idx+1] -= 1
 
                         temp = diff([1, input_rep[idx], 1], var, var_list)
+                        input_rep = many_mul([], deepcopy(input_rep), temp, var_list)
 
-                        input_rep[0] *= temp[0]
-                        if input_rep[0] == 0:
-                            continue
+                        # input_rep[0] *= temp[0]
+                        # if input_rep[0] == 0:
+                        #     continue
 
-                        for m in range(1, len(temp)):
-                            input_rep.append(temp[m])
+                        # for m in range(1, len(temp)):
+                        #     input_rep.append(temp[m])
 
-                        output.append(input_rep)
+                        output = plus(deepcopy(output), input_rep, var_list)
 
                 else:
                     temp = diff(input[idx], var, var_list)
@@ -753,7 +742,7 @@ def diff(input, var, var_list):
                             input_rep.append(1)
 
                     if input_rep != [0]:
-                        output.append(input_rep)
+                        output = plus(deepcopy(output), input_rep, var_list)
             
             elif isinstance(input[idx+1], list):
                 if input[idx] != [e]:
@@ -771,7 +760,7 @@ def diff(input, var, var_list):
                     input_rep.append(temp)
                     input_rep.append(1)
 
-                output.append(input_rep)
+                output = plus(deepcopy(output), input_rep, var_list)
 
     if not output:
         output = [0]

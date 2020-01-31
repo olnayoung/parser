@@ -153,7 +153,6 @@ class App(QMainWindow):
         self.var_list.sort()
 
         ans, self.diff, self.domain, self.in_domain = calcul(self.eq, self.var_list)
-        print(ans)
         self.eq = ans
         
         if ans == 'Error':
@@ -179,9 +178,9 @@ class App(QMainWindow):
             self.domain_title_label.setText('Domain')
             self.domain_label.setText(str_domain)
 
-        # if not is_digit(self.eq):
-        #     if len(self.var_list) < 3 and self.eq[0:3] != 'sig':
-        #         self.open_new_dialog(self.eq, self.diff, self.domain, self.in_domain, self.var_list)
+        if not is_digit(self.eq):
+            if len(self.var_list) < 3 and self.eq[0:3] != 'sig':
+                self.open_new_dialog(self.eq, self.diff, self.domain, self.in_domain, self.var_list)
 
         if not self.diff:
             self.a_label.setText('Answer is: ' + str(ans))
@@ -192,7 +191,6 @@ class App(QMainWindow):
         diff_ans = ''
         for n in range(len(self.diff)):
             diff_ans = diff_ans + 'Differentiated by ' + self.var_list[n] + ': ' + self.diff[n] + '\n'
-            print(self.diff[n])
 
         self.da_label.setText(diff_ans)
 
