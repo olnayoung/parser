@@ -25,7 +25,7 @@ def is_same(values, epsilon):
     for n in range(len(values)):
         for m in range(n, len(values)):
             if n != m:
-                if abs(float(values[n]) - float(values[m])) > epsilon:
+                if abs(float(values[n]) - float(values[m])) > epsilon*(10**3):
                     return 0
 
     return 1
@@ -34,26 +34,6 @@ def double_bracket(temp):
     if is_gathered(temp) and len(temp) == 1:
         temp = temp[0]
     return temp
-
-def is_same_variable(left, sequence):
-    out = 1
-    for n in range(int(len(sequence)/2)):
-        s_idx = 2*n+1
-
-        for t in range(int(len(left)/2)):
-            l_idx = 2*t+1
-
-            if sequence[s_idx:s_idx+2] == left[l_idx:l_idx+2]:
-                break
-
-            if l_idx == len(left)-2:
-                out = 0
-                break
-        
-        if not out:
-            break
-
-    return out
 
 def get_priority(var_list):
     priority = {}
@@ -80,21 +60,35 @@ def mul_idx(one, additional, var_list):
     for n in range(int(len(one)/2)):
         idx = 2*n+1
 
-        if isinstance(one[idx], list):
-            if is_digit(one[idx][0]):
-                pri_1 = len(priority)
-            else:
-                pri_1 = priority[one[idx][0]]
+        if is_gathered(one[idx]):
+            a = multi_idx(one[idx], additional, var_list)
+            if a == 0:
+                return idx
+            elif a == 1:
+                return len(one)
         else:
-            pri_1 = priority[one[idx]]
+            if isinstance(one[idx], list):
+                if is_digit(one[idx][0]):
+                    pri_1 = len(priority)
+                else:
+                    pri_1 = priority[one[idx][0]]
+            else:
+                pri_1 = priority[one[idx]]
 
-        if isinstance(additional, list):
-            if is_digit(additional[0]):
-                pri_2 = len(priority)
-            else:
-                pri_2 = priority[additional[0]]
+        if is_gathered(additional):
+            a = multi_idx(one[idx], additional, var_list)
+            if a == 0:
+                return idx
+            elif a == 1:
+                return len(one)
         else:
-            pri_2 = priority[additional]
+            if isinstance(additional, list):
+                if is_digit(additional[0]):
+                    pri_2 = len(priority)
+                else:
+                    pri_2 = priority[additional[0]]
+            else:
+                pri_2 = priority[additional]
 
         if pri_1 > pri_2:
             return idx
@@ -144,9 +138,7 @@ def plus_idx(many, additional, var_list):
             a = multi_idx(many[n][1], additional[1], var_list)
             if a == 0:
                 return n
-            elif a == 2:
-                continue
-            else:
+            elif a == 1:
                 return len(many)
 
         else:
@@ -154,15 +146,12 @@ def plus_idx(many, additional, var_list):
                 pri_1 = priority[many[n][1][0]]
             else:
                 pri_1 = priority[many[n][1]]
-            continue
 
         if is_gathered(additional[1]):
             a = multi_idx(many[n][1], additional[1], var_list)
             if a == 0:
                 return n
-            elif a == 2:
-                continue
-            else:
+            elif a == 1:
                 return len(many)
         
         else:
@@ -191,13 +180,19 @@ def plus_idx(many, additional, var_list):
                 first = many[n][1][1]
                 second = additional[1][1]
 
-            a = multi_idx(first, second, var_list)
-            if a == 0:
+            if len(first) == 1 and len(second) == 1:
+                if first[0] < second[0]:
+                    return n
+            elif len(first) == 1:
                 return n
-            elif a == 2:
+            elif len(second) == 1:
                 continue
             else:
-                return len(many)
+                a = multi_idx(first, second, var_list)
+                if a == 0:
+                    return n
+                elif a == 1:
+                    return len(many)
 
         elif pri_1 > pri_2:
             return n
@@ -231,11 +226,15 @@ def multi_idx(many, additional, var_list):      # return 0: append prev, return 
             elif len(many[n]) < len(additional[n]):
                 return 1
             else:
-                a = multi_idx(many[n], additional[n], var_list)
-                if a == len(many[n]):
+                if multi_idx(many[n], additional[n], var_list) == len(many[n]):
                     return 1
                 else:
                     return 0
+                # a = multi_idx(many[n], additional[n], var_list)
+                # if a == len(many[n]):
+                #     return 1
+                # else:
+                #     return 0
 
     return 1
 
@@ -246,11 +245,6 @@ def plus_sep(left, sequence, delete, var_list):
         if sequence[1:] == left[m][1:]:
             left[m][0] += sequence[0]
             check = 1
-        
-        elif len(sequence) == len(left[m]):
-            if is_same_variable(left[m], sequence):
-                left[m][0] += sequence[0]
-                check = 1
 
         if left[m][0] == 0:
             delete.append(m)
@@ -295,11 +289,6 @@ def minus_sep(left, sequence, delete, var_list):
         if sequence[1:] == left[m][1:]:
             left[m][0] -= sequence[0]
             check = 1
-
-        elif len(sequence) == len(left[m]):
-            if is_same_variable(left[m], sequence):
-                left[m][0] -= sequence[0]
-                check = 1
 
         if left[m][0] == 0:
             delete.append(m)
@@ -380,7 +369,7 @@ def multiply(left, sequence, var_list):
             if is_digit(ans[a_idx+1]) and is_digit(sequence[s_idx+1]):
                 ans[a_idx+1] += sequence[s_idx+1]
             else:
-                ans[a_idx+1] = plus(ans[a_idx+1], sequence[s_idx+1], var_list)
+                ans[a_idx+1] = plus([ans[a_idx+1]], [sequence[s_idx+1]], var_list)
             
             if ans[a_idx+1] == 0:
                 del ans[a_idx]
@@ -405,11 +394,15 @@ def many_div(ans, left, sequence, var_list):
     
     else:
         if len(left) != 1:
-
             if is_gathered(sequence):
                 ans.append(left)
-                ans[-1].append(sequence)
-                ans[-1].append(-1)
+
+                if sequence in ans:
+                    idx = ans.index(sequence)
+                    ans[idx] -= 1
+                else:
+                    ans[-1].append(sequence)
+                    ans[-1].append(-1)
             else:
                 temp = divide(left, sequence, var_list)
                 ans.append(temp)
@@ -590,7 +583,7 @@ def list_2_str(output, input):
     return output
 
 
-def eq_domain(eq, var_list):
+def domain_to_string(eq, var_list):
     domain = []
 
     for n in range(len(eq)):
@@ -600,14 +593,24 @@ def eq_domain(eq, var_list):
 
     return domain
 
-def in_eq_domain(in_eq, var_list):
-    domain = []
 
-    for n in range(len(in_eq)):
-        st = from_list_to_str('', in_eq[n])
-        domain.append(st)
-            
-    return domain
+def add_domain(eq, in_eq, domain_1, domain_2):
+    if is_digit(domain_2):
+        if domain_2 < 0 and domain_1 not in eq and domain_1 not in in_eq:
+            eq.append(domain_1)
+        elif 0 < domain_2 < 1 and domain_1 not in in_eq:
+            in_eq.append(domain_1)
+            if domain_1 in eq:
+                eq.remove(domain_1)
+    else:
+        if len(domain_2) == 1:
+            if domain_2[0] < 0 and domain_1 not in eq and domain_1 not in in_eq:
+                eq.append(domain_1)
+            elif 0 < domain_2[0] < 1 and domain_1 not in in_eq:
+                in_eq.append(domain_1)
+                if domain_1 in eq:
+                    eq.remove(domain_1)
+    return eq, in_eq
 
 
 def diff(input, var, var_list):
@@ -663,25 +666,33 @@ def diff(input, var, var_list):
                         if temp == [0]:
                             continue
                         elif temp != [1]:
-                            input_rep.append(temp)
-                            input_rep.append(1)
-                        
-                        output.append(input_rep)
+                            input_rep = many_mul([], deepcopy(input_rep), temp, var_list)
                     
                     else:
-                        input_rep[0] *= input_rep[idx+1]
-                        input_rep[idx+1] -= 1
+                        save_idx = deepcopy(input_rep[idx])
+                        if is_digit(save_idx):
+                            save_idx = [save_idx]
+                        save_idx_1 = deepcopy(input_rep[idx+1])
+                        if is_digit(save_idx_1):
+                            save_idx_1 = [save_idx_1]
 
-                        temp = diff([1, input_rep[idx], 1], var, var_list)
+                        input_rep[idx+1] = minus(deepcopy(save_idx_1), [1], var_list)
+                        input_rep = many_mul([], deepcopy(input_rep), save_idx_1, var_list)
 
-                        input_rep[0] *= temp[0]
+                        temp = diff([1, save_idx, 1], var, var_list)
+
+                        # input_rep[0] *= temp[0]
+                        # if input_rep[0] == 0:
+                        #     continue
+                        input_rep = many_mul([], deepcopy(input_rep), temp, var_list)
+                        # for m in range(1, len(temp)):
+                        #     input_rep = many_mul([], deepcopy(input_rep), temp[m], var_list)
+                        #     input_rep.append(temp[m])
                         if input_rep[0] == 0:
                             continue
 
-                        for m in range(1, len(temp)):
-                            input_rep.append(temp[m])
-
-                        output.append(input_rep)
+                    output.append(input_rep)
+                    # output = many_mul([], deepcopy(output), input_rep, var_list)
 
                 elif input[idx][0] == 'log':
                     if input_rep[idx+1] == 1:

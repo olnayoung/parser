@@ -1,8 +1,7 @@
 from initialize import tokenize
 from parsing import Parser
 from extra_funcs import from_list_to_str
-from extra_funcs import in_eq_domain
-from extra_funcs import eq_domain
+from extra_funcs import domain_to_string
 from extra_funcs import diff
 from extra_funcs import is_digit
 from extra_funcs import is_same
@@ -214,7 +213,7 @@ def differentiable_2D(eq, eq_diff, domain, in_domain, string, var_list):
         dx = -1
         dy = -1
 
-        epsilon = 10**(-9)
+        epsilon = 10**(-10)
 
         var = []
         value = []
@@ -233,33 +232,27 @@ def differentiable_2D(eq, eq_diff, domain, in_domain, string, var_list):
         if len(var) != 2:
             raise Exception('Expected 2 variable but got %d' % (len(var)))
 
-        temp_string = var[0] + '=' + str(float(value[0])+epsilon) + ',' + var[1] + '=' + value[1]
-        if check_domain(domain, in_domain, var, temp_string):
-            ans_l_p_0 = change_x_to_num(eq, var, temp_string)
-            ans_dx_l_p_0 = change_x_to_num(eq_diff[0], var, temp_string)
-        else:
-            dx = 0
+        PlusMinus_epsilon = [+epsilon, -epsilon]
+        ans_l_x = []
+        ans_l_dx = []
+        ans_l_y = []
+        ans_l_dy = []
 
-        temp_string = var[0] + '=' + str(float(value[0])-epsilon) + ',' + var[1] + '=' + value[1]
-        if check_domain(domain, in_domain, var, temp_string):
-            ans_l_m_0 = change_x_to_num(eq, var, temp_string)
-            ans_dx_l_m_0 = change_x_to_num(eq_diff[0], var, temp_string)
-        else:
-            dx = 0
+        for n in range(len(PlusMinus_epsilon)):
+            temp_string = var[0] + '=' + str(float(value[0])+PlusMinus_epsilon[n]) + ',' + var[1] + '=' + value[1]
+            if check_domain(domain, in_domain, var, temp_string):
+                ans_l_x.append(change_x_to_num(eq, var, temp_string))
+                ans_l_dx.append(change_x_to_num(eq_diff[0], var, temp_string))
+            else:
+                dx = 0
 
-        temp_string = var[0] + '=' + value[0] + ',' + var[1] + '=' + str(float(value[1])+epsilon)
-        if check_domain(domain, in_domain, var, temp_string):
-            ans_l_0_p = change_x_to_num(eq, var, temp_string)
-            ans_dy_l_0_p = change_x_to_num(eq_diff[1], var, temp_string)
-        else:
-            dy = 0
-
-        temp_string = var[0] + '=' + value[0] + ',' + var[1] + '=' + str(float(value[1])-epsilon)
-        if check_domain(domain, in_domain, var, temp_string):
-            ans_l_0_m = change_x_to_num(eq, var, temp_string)
-            ans_dy_l_0_m = change_x_to_num(eq_diff[1], var, temp_string)
-        else:
-            dy = 0
+        for n in range(len(PlusMinus_epsilon)):
+            temp_string = var[0] + '=' + value[0] + ',' + var[1] + '=' + str(float(value[1])+PlusMinus_epsilon[n])
+            if check_domain(domain, in_domain, var, temp_string):
+                ans_l_y.append(change_x_to_num(eq, var, temp_string))
+                ans_l_dy.append(change_x_to_num(eq_diff[0], var, temp_string))
+            else:
+                dy = 0
 
         if check_domain(domain, in_domain, var, string):
             ans = change_x_to_num(eq, var, string)
@@ -271,16 +264,16 @@ def differentiable_2D(eq, eq_diff, domain, in_domain, string, var_list):
 
         epsilon = epsilon * 10
 
-        if dx == -1 and is_same([ans_l_p_0, ans_l_m_0, ans], epsilon):
-            if is_same([ans_dx_l_p_0, ans_dx_l_m_0, ans_dx], epsilon):
+        if dx == -1 and is_same([ans_l_x[0], ans_l_x[1], ans], epsilon):
+            if is_same([ans_l_dx[0], ans_l_dx[1], ans_dx], epsilon):
                 dx = 1
             else:
                 dx = 0
         else:
             dx = 0
 
-        if dy == -1 and is_same([ans_l_0_p, ans_l_0_m, ans], epsilon):
-            if is_same([ans_dy_l_0_p, ans_dy_l_0_m, ans_dy], epsilon):
+        if dy == -1 and is_same([ans_l_y[0], ans_l_y[1], ans], epsilon):
+            if is_same([ans_l_dy[0], ans_l_dy[1], ans_dy], epsilon):
                 dy = 1
             else:
                 dy = 0
@@ -330,14 +323,12 @@ def sigma(k, equation, start, end, var_list = None):
 
 def check_domain(domain, in_domain, var_list, input):
     if domain:
-        domain = eq_domain(domain, var_list)
+        domain = domain_to_string(domain, var_list)
     if in_domain:
-        in_domain = in_eq_domain(in_domain, var_list)
+        in_domain = domain_to_string(in_domain, var_list)
 
     for n in range(len(domain)):
         opt = change_x_to_num(domain[n], var_list, input)
-        # if opt[0] == '*':
-        #     return 0
         if is_digit(opt):
             if float(opt) == 0:
                 return 0
@@ -346,10 +337,8 @@ def check_domain(domain, in_domain, var_list, input):
     
     for n in range(len(in_domain)):
         opt = change_x_to_num(in_domain[n], var_list, input)
-        # if opt[0] == '*':
-        #     return 0
         if is_digit(opt):
-            if float(opt) == 0:
+            if float(opt) <= 0:
                 return 0
         else:
             return 0

@@ -15,6 +15,7 @@ from extra_funcs import minus
 from extra_funcs import power
 from extra_funcs import many_div
 from extra_funcs import double_bracket
+from extra_funcs import add_domain
 from copy import deepcopy
 
 NUMBER = [float, int]
@@ -65,6 +66,8 @@ class Term(Expr):
         self.termTail = termTail
 
     def eval(self):
+        global eq, in_eq
+
         left = self.sequence.eval()
 
         if self.termTail is None:
@@ -76,32 +79,12 @@ class Term(Expr):
             for n in range(len(domain)):
                 for m in range(int(len(domain[n])/2)):
                     idx = 2*m + 1
-                    if is_digit(domain[n][idx+1]):
-                        if domain[n][idx+1] < 0 and domain[n][idx] not in eq:
-                            eq.append(domain[n][idx])
-                        elif 0 < domain[n][idx+1] < 1 and domain[n][idx] not in in_eq:
-                            in_eq.append(domain[n][idx])
-                    else:
-                        if len(domain[n][idx+1]) == 1:
-                            if domain[n][idx+1][0] < 0 and domain[n][idx] not in eq:
-                                eq.append(domain[n][idx])
-                            elif 0 < domain[n][idx+1][0] < 1 and domain[n][idx] not in in_eq:
-                                in_eq.append(domain[n][idx])
+                    eq, in_eq = add_domain(eq, in_eq, domain[n][idx], domain[n][idx+1])
+                    
         else:
             for m in range(int(len(domain)/2)):
                 idx = 2*m + 1
-
-                if is_digit(domain[idx+1]):
-                    if domain[idx+1] < 0 and domain[idx] not in eq: 
-                        eq.append(domain[idx])
-                    elif 0 < domain[idx+1] < 1 and domain[idx] not in in_eq:
-                        in_eq.append(domain[idx])
-                else:
-                    if len(domain[idx+1]) == 1:
-                        if domain[idx+1][0] < 0 and domain[idx] not in eq:
-                            eq.append(domain[idx])
-                        elif 0 < domain[idx+1][0] < 1 and domain[idx] not in in_eq:
-                            in_eq.append(domain[idx])
+                eq, in_eq = add_domain(eq, in_eq, domain[idx], domain[idx+1])
 
         return domain
 
@@ -124,8 +107,6 @@ class TermTail(object):
             left = many_div([], left, sequence, var_list)
             
         left = double_bracket(left)
-        # if is_gathered(left) and len(left[0]) == 1:
-        #     left = left[0]
 
         if self.termTail is None:
             return left
@@ -224,9 +205,10 @@ class Factor(Expr):
                 if base not in in_eq:
                     if not is_digit(base[0]) or len(base) > 1:
                         in_eq.append(base)
-                if base not in eq:
+                base_1 = plus(deepcopy(base), [-1], var_list)
+                if base_1 not in eq and base_1 not in in_eq:
                     if not is_digit(base[0]) or len(base) > 1:
-                        eq.append(plus(deepcopy(base), [-1], var_list))
+                        eq.append(base_1)
 
             if is_digit(temp[0]) and len(temp) == 1 and is_digit(base[0]) and len(base) == 1:
                 return [log(temp[0], base[0])]

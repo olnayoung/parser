@@ -136,6 +136,7 @@ class App(QMainWindow):
         if not self.eq:
             self.a_label.setText('Enter Equation')
             self.d_label.setText('')
+            self.da_label.setText('')
             return 0
 
         self.var_list = []
@@ -152,6 +153,7 @@ class App(QMainWindow):
         self.var_list.sort()
 
         ans, self.diff, self.domain, self.in_domain = calcul(self.eq, self.var_list)
+        print(ans)
         self.eq = ans
         
         if ans == 'Error':
@@ -177,18 +179,20 @@ class App(QMainWindow):
             self.domain_title_label.setText('Domain')
             self.domain_label.setText(str_domain)
 
-        if not is_digit(self.eq):
-            if len(self.var_list) < 3 and self.eq[0:3] != 'sig':
-                self.open_new_dialog(self.eq, self.diff, self.domain, self.in_domain, self.var_list)
+        # if not is_digit(self.eq):
+        #     if len(self.var_list) < 3 and self.eq[0:3] != 'sig':
+        #         self.open_new_dialog(self.eq, self.diff, self.domain, self.in_domain, self.var_list)
 
         if not self.diff:
             self.a_label.setText('Answer is: ' + str(ans))
             self.d_label.setText('')
+            self.da_label.setText('')
             return 0
         
         diff_ans = ''
         for n in range(len(self.diff)):
             diff_ans = diff_ans + 'Differentiated by ' + self.var_list[n] + ': ' + self.diff[n] + '\n'
+            print(self.diff[n])
 
         self.da_label.setText(diff_ans)
 
@@ -285,13 +289,13 @@ class NewWindow(QDialog):
             self.range_x_label = QLabel(self.var_list[0] + ':', self)
             self.range_x_label.setFixedSize(30, 30)
 
-            self.x_value1 = QLineEdit(self)
+            self.x_value1 = QLineEdit(str(self.ran_x[0]), self)
             self.x_value1.setFixedSize(80, 30)
 
             self._label = QLabel(' ~ ', self)
             self._label.setFixedSize(40, 30)
 
-            self.x_value2 = QLineEdit(self)
+            self.x_value2 = QLineEdit(str(self.ran_x[1]), self)
             self.x_value2.setFixedSize(80, 30)
 
             self.range = QHBoxLayout(self)
@@ -309,13 +313,13 @@ class NewWindow(QDialog):
                 self.range_y_label = QLabel(', ' + self.var_list[1] + ' : ', self)
                 self.range_y_label.setFixedSize(50, 30)
 
-                self.y_value1 = QLineEdit(self)
+                self.y_value1 = QLineEdit(str(self.ran_y[0]), self)
                 self.y_value1.setFixedSize(80, 30)
 
                 self.y_label = QLabel(' ~ ', self)
                 self.y_label.setFixedSize(40, 30)
 
-                self.y_value2 = QLineEdit(self)
+                self.y_value2 = QLineEdit(str(self.ran_y[1]), self)
                 self.y_value2.setFixedSize(80, 30)
 
                 self.range.setSpacing(0)
