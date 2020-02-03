@@ -148,10 +148,12 @@ def plus_idx(many, additional, var_list):
                 return n
             elif a == 1:
                 return len(many)
-
         else:
             if isinstance(many[n][1], list):
-                pri_1 = priority[many[n][1][0]]
+                if is_digit(many[n][1][0]):
+                    pri_1 = len(priority)
+                else:
+                    pri_1 = priority[many[n][1][0]]
             else:
                 pri_1 = priority[many[n][1]]
 
@@ -161,10 +163,12 @@ def plus_idx(many, additional, var_list):
                 return n
             elif a == 1:
                 return len(many)
-        
         else:
             if isinstance(additional[1], list):
-                pri_2 = priority[additional[1][0]]
+                if is_digit(additional[1][0]):
+                    pri_2 = len(priority)
+                else:
+                    pri_2 = priority[additional[1][0]]
             else:
                 pri_2 = priority[additional[1]]
 
@@ -685,22 +689,22 @@ def diff(input, var, var_list):
                     if input_rep[idx+1] == 1:
                         inside = deepcopy(input_rep[idx][1])
                         temp = diff(input_rep[idx][1], var, var_list)
-                        input_rep = many_mul([], deepcopy(input_rep), temp, var_list)
                         
-                        # if temp == [0]:
-                        #     continue
+                        if temp == [0]:
+                            continue
                         # elif temp != [1]:
                         #     input_rep.append(temp)
                         #     input_rep.append(1)
+                        input_rep = many_mul([], deepcopy(input_rep), temp, var_list)
 
-                        if len(input_rep[idx][2]) == 1 and is_digit(input_rep[idx][2][0]):
-                            input_rep[0] *= (log(input_rep[idx][2][0], e) ** -1)
+                        if len(inside) == 1 and is_digit(inside[0]):
+                            input_rep[0] *= (log(inside[0], e) ** -1)
                             del input_rep[idx]
                             del input_rep[idx]
 
                         else:
                             input_rep[idx+1] = -1
-                            input_rep[idx] = ['log', input_rep[idx][2], [e]]
+                            input_rep[idx] = ['log', inside, [e]]
 
                         input_rep = many_div([], input_rep, inside, var_list)
                         input_rep = double_bracket(input_rep)
