@@ -473,7 +473,7 @@ def power(left, sequence, var_list):
                 ans.append(1)
                 if left[0] != 1:
                     ans.append(left[0])
-                    ans.append(sequence)
+                    ans.append(sequence[0])
 
             for n in range(int(len(left)/2)):
                 l_idx = 2*n + 1
@@ -717,15 +717,7 @@ def diff(input, var, var_list):
 
                             temp = diff([1, input_rep[idx], 1], var, var_list)[0]
                             input_rep = many_mul([], deepcopy(input_rep), temp, var_list)
-                    
-                    else:
-                        temp = diff(input[idx], var, var_list)[0]
 
-                        if temp == [0]:
-                            continue
-
-                        if not is_digit(input_rep[idx]):
-                            raise Exception ('Not differentiable')
                         input_rep[0] *= input_rep[idx+1]
                         input_rep[idx+1] -= 1
 

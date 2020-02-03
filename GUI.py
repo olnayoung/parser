@@ -189,8 +189,8 @@ class App(QMainWindow):
 
         if not self.domain and not self.in_domain:
             str_domain = 'Domain: R'
-            if len(self.var_list) == 2:
-                str_domain += '^2'
+            if len(self.var_list) > 1:
+                str_domain = str_domain + '^' + str(len(self.var_list))
             self.domain_title_label.setText(str_domain)
         else:
             str_domain = ''

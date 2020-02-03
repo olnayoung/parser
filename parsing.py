@@ -222,7 +222,7 @@ class Factor(Expr):
                         eq.append(base)
 
                 base_1 = plus(deepcopy(base), [-1], var_list)
-                if base_1 not in eq and base_1 not in in_eq:
+                if base_1 not in eq:
                     if not is_digit(base[0]) or len(base) > 1:
                         eq.append(base_1)
 
