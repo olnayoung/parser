@@ -1,5 +1,6 @@
 from math import log, sin, cos, tan, pi, e, inf
 from copy import deepcopy
+import math
 
 def is_digit(value):
   try:
@@ -477,11 +478,17 @@ def power(left, sequence, var_list):
             for n in range(int(len(left)/2)):
                 l_idx = 2*n + 1
 
-                ans.append(left[l_idx])
+                # ans.append(left[l_idx])
 
                 if not is_gathered(sequence) and len(sequence) == 1 and is_digit(left[l_idx+1]):
-                    ans.append(left[l_idx+1] * sequence[0])
+                    if left[l_idx+1] * sequence[0] == 1 and left[l_idx+1] > 1 and 0 < sequence[0] < 1:
+                        ans.append(left)
+                        ans.append(sequence[0])
+                    else:
+                        ans.append(left[l_idx])
+                        ans.append(left[l_idx+1] * sequence[0])
                 else:
+                    ans.append(left[l_idx])
                     ans.append(many_mul([], [left[l_idx+1]], sequence, var_list))
 
     return ans
@@ -607,133 +614,118 @@ def add_domain(eq, in_eq, domain_1, domain_2):
 
 
 def diff(input, var, var_list):
-    funcs_list = ['sin', 'cos', 'tan']
-    output = [0]
+    try:
+        funcs_list = ['sin', 'cos', 'tan']
+        output = [0]
 
-    if is_gathered(input):                  # if it is polynomial
-        for t in range(len(input)):
-            temp = diff(input[t], var, var_list)
+        if is_gathered(input):                  # if it is polynomial
+            for t in range(len(input)):
+                temp = diff(input[t], var, var_list)[0]
 
-            if temp != [0]:
-                if not output:
-                    output = deepcopy(temp)
-                else:
-                    output = plus(output, temp, var_list)
+                if temp != [0]:
+                    if not output:
+                        output = deepcopy(temp)
+                    else:
+                        output = plus(output, temp, var_list)
 
-    else:
-        for n in range(int(len(input)/2)):
+        else:
+            for n in range(int(len(input)/2)):
 
-            input_rep = deepcopy(input)
-            idx = 2*n + 1
+                input_rep = deepcopy(input)
+                idx = 2*n + 1
 
-            if input[idx] == var:
-                if is_digit(input[idx+1]):
-                    input_rep[0] *= input[idx+1]    
-                    input_rep[idx+1] -= 1
+                if input[idx] == var:
+                    if is_digit(input[idx+1]):
+                        input_rep[0] *= input[idx+1]    
+                        input_rep[idx+1] -= 1
 
-                    if input_rep[idx+1] == 0:
-                        del input_rep[idx]
-                        del input_rep[idx]
+                        if input_rep[idx+1] == 0:
+                            del input_rep[idx]
+                            del input_rep[idx]
 
-                else:
-                    input_rep[idx+1] = minus(deepcopy(input_rep[idx+1]), [1], var_list)
-                    input_rep = many_mul([], input_rep, input[idx+1], var_list)
+                    else:
+                        input_rep[idx+1] = minus(deepcopy(input_rep[idx+1]), [1], var_list)
+                        input_rep = many_mul([], input_rep, input[idx+1], var_list)
+                    output = plus(deepcopy(output), input_rep, var_list)
 
-                output = plus(deepcopy(output), input_rep, var_list)
+                elif isinstance(input[idx], list) and len(input[idx]) > 1:
+                    if input[idx][0] in funcs_list:
+                        if input[idx+1] == 1:
+                            if input[idx][0] == 'sin':
+                                input_rep[idx][0] = 'cos'
+                            elif input[idx][0] == 'cos':
+                                input_rep[idx][0] = 'sin'
+                                input_rep[0] *= -1
+                            else:
+                                input_rep[idx][0] = 'cos'
+                                input_rep[idx+1] = -2
 
-            elif isinstance(input[idx], list) and len(input[idx]) > 1:
-                if input[idx][0] in funcs_list:
-                    if input[idx+1] == 1:
-                        if input[idx][0] == 'sin':
-                            input_rep[idx][0] = 'cos'
-                        elif input[idx][0] == 'cos':
-                            input_rep[idx][0] = 'sin'
-                            input_rep[0] *= -1
-                        else:
-                            input_rep[idx][0] = 'cos'
-                            input_rep[idx+1] = -2
-
-                        temp = diff(input[idx][1], var, var_list)
-                        follwer = deepcopy(input_rep[idx:idx+2])
-                        follwer.insert(0, 1)
-                        del input_rep[idx]
-                        del input_rep[idx]
-                        input_rep = many_mul([], deepcopy(input_rep), follwer, var_list)
+                            temp = diff(input[idx][1], var, var_list)[0]
+                            follwer = deepcopy(input_rep[idx:idx+2])
+                            follwer.insert(0, 1)
+                            del input_rep[idx]
+                            del input_rep[idx]
+                            input_rep = many_mul([], deepcopy(input_rep), follwer, var_list)
+                            
+                            if temp == [0]:
+                                continue
+                            elif temp != [1]:
+                                input_rep = many_mul([], deepcopy(input_rep), temp, var_list)
                         
-                        if temp == [0]:
-                            continue
-                        elif temp != [1]:
+                        else:
+                            save_idx = deepcopy(input_rep[idx])
+                            if is_digit(save_idx):
+                                save_idx = [save_idx]
+
+                            save_idx_1 = deepcopy(input_rep[idx+1])
+                            if is_digit(save_idx_1):
+                                save_idx_1 = [save_idx_1]
+
+                            input_rep[idx+1] = minus(deepcopy(save_idx_1), [1], var_list)
+                            input_rep = many_mul([], deepcopy(input_rep), save_idx_1, var_list)
+
+                            temp = diff([1, save_idx, 1], var, var_list)[0]
+                            input_rep = many_mul([], deepcopy(input_rep), temp, var_list)
+
+                            if input_rep[0] == 0:
+                                continue
+
+                    elif input[idx][0] == 'log':
+                        if input_rep[idx+1] == 1:
+                            inside = deepcopy(input_rep[idx])
+                            temp = diff(input_rep[idx][1], var, var_list)[0]
+
+                            if temp == [0]:
+                                continue
+
+                            del input_rep[idx]
+                            del input_rep[idx]
+
+                            if len(inside[1]) == 1 and is_digit(inside[1][0]):
+                                input_rep[0] *= (log(inside[1][0], math.e) ** -1)
+
+                            if not (len(inside[2]) == 1 and inside[2][0] == math.e):
+                                input_rep = many_mul([], deepcopy(input_rep), [1, ['log', inside[2], [math.e]], -1], var_list)
+
+                            input_rep = many_mul([], deepcopy(input_rep), temp, var_list)
+                            input_rep = many_div([], input_rep, inside[1], var_list)
+                            input_rep = double_bracket(input_rep)
+
+                        else:
+                            input_rep[0] *= input_rep[idx+1]
+                            input_rep[idx+1] -= 1
+
+                            temp = diff([1, input_rep[idx], 1], var, var_list)[0]
                             input_rep = many_mul([], deepcopy(input_rep), temp, var_list)
                     
                     else:
-                        save_idx = deepcopy(input_rep[idx])
-                        if is_digit(save_idx):
-                            save_idx = [save_idx]
+                        temp = diff(input[idx], var, var_list)[0]
 
-                        save_idx_1 = deepcopy(input_rep[idx+1])
-                        if is_digit(save_idx_1):
-                            save_idx_1 = [save_idx_1]
-
-                        input_rep[idx+1] = minus(deepcopy(save_idx_1), [1], var_list)
-                        input_rep = many_mul([], deepcopy(input_rep), save_idx_1, var_list)
-
-                        temp = diff([1, save_idx, 1], var, var_list)
-                        input_rep = many_mul([], deepcopy(input_rep), temp, var_list)
-
-                        if input_rep[0] == 0:
-                            continue
-
-                    output = plus(deepcopy(output), input_rep, var_list)
-
-                elif input[idx][0] == 'log':
-                    if input_rep[idx+1] == 1:
-                        inside = deepcopy(input_rep[idx][1])
-                        temp = diff(input_rep[idx][1], var, var_list)
-                        
                         if temp == [0]:
                             continue
-                        # elif temp != [1]:
-                        #     input_rep.append(temp)
-                        #     input_rep.append(1)
-                        input_rep = many_mul([], deepcopy(input_rep), temp, var_list)
 
-                        if len(inside) == 1 and is_digit(inside[0]):
-                            input_rep[0] *= (log(inside[0], e) ** -1)
-                            del input_rep[idx]
-                            del input_rep[idx]
-
-                        else:
-                            input_rep[idx+1] = -1
-                            input_rep[idx] = ['log', inside, [e]]
-
-                        input_rep = many_div([], input_rep, inside, var_list)
-                        input_rep = double_bracket(input_rep)
-
-                        output = plus(deepcopy(output), input_rep, var_list)
-                    
-                    else:
-                        input_rep[0] *= input_rep[idx+1]
-                        input_rep[idx+1] -= 1
-
-                        temp = diff([1, input_rep[idx], 1], var, var_list)
-                        input_rep = many_mul([], deepcopy(input_rep), temp, var_list)
-
-                        # input_rep[0] *= temp[0]
-                        # if input_rep[0] == 0:
-                        #     continue
-
-                        # for m in range(1, len(temp)):
-                        #     input_rep.append(temp[m])
-
-                        output = plus(deepcopy(output), input_rep, var_list)
-
-                else:
-                    temp = diff(input[idx], var, var_list)
-
-                    if temp == [0]:
-                        continue
-
-                    else:
+                        if not is_digit(input_rep[idx]):
+                            raise Exception ('Not differentiable')
                         input_rep[0] *= input_rep[idx+1]
                         input_rep[idx+1] -= 1
 
@@ -741,34 +733,34 @@ def diff(input, var, var_list):
                             del input_rep[idx]
                             del input_rep[idx]
 
-                        if temp != [1]:
-                            input_rep.append(temp)
+                        input_rep = many_mul([], deepcopy(input_rep), temp, var_list)
+
+                    output = plus(deepcopy(output), input_rep, var_list)
+                
+                elif isinstance(input[idx+1], list):
+                    if input[idx] != [math.e]:
+                        if len(input[idx]) == 1 and is_digit(input[idx][0]):
+                            input_rep[0] *= log(input[idx][0], math.e)
+                        else:
+                            input_rep.append(['log', input[idx], [math.e]])
                             input_rep.append(1)
-
-                    if input_rep != [0]:
-                        output = plus(deepcopy(output), input_rep, var_list)
-            
-            elif isinstance(input[idx+1], list):
-                if input[idx] != [e]:
-                    if len(input[idx]) == 1 and is_digit(input[idx][0]):
-                        input_rep[0] *= log(input[idx][0], e)
-                    else:
-                        input_rep.append(['log', input[idx], [e]])
+                    
+                    temp = diff(input[idx+1], var, var_list)[0]
+                    
+                    if temp == [0]:
+                        continue
+                    elif temp != [1]:
+                        input_rep.append(temp)
                         input_rep.append(1)
-                
-                temp = diff(input[idx+1], var, var_list)
-                
-                if temp == [0]:
-                    continue
-                elif temp != [1]:
-                    input_rep.append(temp)
-                    input_rep.append(1)
 
-                output = plus(deepcopy(output), input_rep, var_list)
+                    output = plus(deepcopy(output), input_rep, var_list)
 
-    if not output:
-        output = [0]
-    
-    output = double_bracket(output)
+        if not output:
+            output = [0]
+        
+        output = double_bracket(output)
 
-    return output
+        return output, 0
+
+    except Exception as e:
+        return 'Error', e

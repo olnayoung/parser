@@ -145,6 +145,11 @@ class SequenceTail(object):
             if factor == [2]:
                 left = many_mul([], left, left, var_list)
             else:
+                if is_digit(factor[0]) and len(factor) == 1:
+                    if 0 < factor[0] < 1:
+                        if left not in in_eq:
+                            in_eq.append(left)
+
                 left = power(left, factor, var_list)
 
             left = double_bracket(left)
@@ -184,6 +189,12 @@ class Factor(Expr):
         elif self.sign in self.funcs_list:
             func = self.funcs[self.sign]
 
+            if not is_digit(temp[0]) or len(temp) > 1 and self.sign == 'tan':
+                if temp not in eq:
+                    temp_pi = plus(deepcopy(temp), [pi/2], var_list)
+                    if temp_pi not in eq:
+                        eq.append(temp_pi)
+
             if is_digit(temp[0]) and len(temp) == 1:
                 if self.sign == 'tan' and temp[0] == (pi/2):
                     raise Exception('Cannot define tan(pi/2)')
@@ -193,18 +204,23 @@ class Factor(Expr):
                 return [1, [self.sign, temp], 1]
 
         elif self.sign == 'log':
-            if temp not in in_eq:
-                if not is_digit(temp[0]) or len(temp) > 1:
+            if not is_digit(temp[0]) or len(temp) > 1:
+                if temp not in in_eq:
                     in_eq.append(temp)
+                if temp not in eq:
+                    eq.append(temp)
 
             if self.base == None:
                 base = [e]
             else:
                 base = self.base.eval() if isinstance(self.base, Expr) else self.base
 
-                if base not in in_eq:
-                    if not is_digit(base[0]) or len(base) > 1:
+                if not is_digit(base[0]) or len(base) > 1:
+                    if base not in in_eq:
                         in_eq.append(base)
+                    if base not in eq:
+                        eq.append(base)
+
                 base_1 = plus(deepcopy(base), [-1], var_list)
                 if base_1 not in eq and base_1 not in in_eq:
                     if not is_digit(base[0]) or len(base) > 1:

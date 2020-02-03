@@ -9,7 +9,9 @@ from calculator import plot_3D
 from calculator import differentiable_1D
 from calculator import differentiable_2D
 from calculator import check_domain
+from extra_funcs import diff
 from extra_funcs import is_digit
+from extra_funcs import from_list_to_str
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
@@ -152,15 +154,37 @@ class App(QMainWindow):
 
         self.var_list.sort()
 
-        ans, self.diff, self.domain, self.in_domain = calcul(self.eq, self.var_list)
-        self.eq = ans
+        ans, self.domain, self.in_domain = calcul(self.eq, self.var_list)
         
         if ans == 'Error':
-            self.a_label.setText('*Error* ' + self.diff.args[0])
+            self.a_label.setText('*Error* ' + self.domain.args[0])
             self.d_label.setText('')
             return 0
+        
+        if self.eq[0:3] == 'sig':
+            self.eq = ans[0]
+        
+            self.diff = []
+            for n in range(len(self.var_list)):
+                differential = ans[1]
+                if differential[0] == 'Error':
+                    self.diff = 'Error' + differential[1].args[0]
+                    break
+                else:
+                    self.diff.append(differential[0])
+        else:
+            self.eq = from_list_to_str('', ans)
 
-        self.a_label.setText('Equation is: ' + str(ans))
+            self.diff = []
+            for n in range(len(self.var_list)):
+                differential = diff(ans, self.var_list[n], self.var_list)
+                if differential[0] == 'Error':
+                    self.diff = 'Error' + differential[1].args[0]
+                    break
+                else:
+                    self.diff.append(from_list_to_str('', differential[0]))
+
+        self.a_label.setText('Equation is: ' + str(self.eq))
         self.d_label.setText('Differential')
 
         if not self.domain and not self.in_domain:
@@ -174,7 +198,7 @@ class App(QMainWindow):
             for n in range(len(self.domain)):
                 str_domain = str_domain + from_list_to_str('', self.domain[n]) + ' ≠ 0' + '\n'
             for n in range(len(self.in_domain)):
-                str_domain = str_domain + from_list_to_str('', self.in_domain[n]) + ' > 0' + '\n'
+                str_domain = str_domain + from_list_to_str('', self.in_domain[n]) + ' ≥ 0' + '\n'
             self.domain_title_label.setText('Domain')
             self.domain_label.setText(str_domain)
 
@@ -183,14 +207,17 @@ class App(QMainWindow):
                 self.open_new_dialog(self.eq, self.diff, self.domain, self.in_domain, self.var_list)
 
         if not self.diff:
-            self.a_label.setText('Answer is: ' + str(ans))
+            self.a_label.setText('Answer is: ' + str(self.eq))
             self.d_label.setText('')
             self.da_label.setText('')
             return 0
         
         diff_ans = ''
-        for n in range(len(self.diff)):
-            diff_ans = diff_ans + 'Differentiated by ' + self.var_list[n] + ': ' + self.diff[n] + '\n'
+        if isinstance(self.diff, str):
+            diff_ans = self.diff
+        else:
+            for n in range(len(self.diff)):
+                diff_ans = diff_ans + 'Differentiated by ' + self.var_list[n] + ': ' + self.diff[n] + '\n'
 
         self.da_label.setText(diff_ans)
 
@@ -237,7 +264,7 @@ class App(QMainWindow):
                     self.dt_label.setText(differentiable)
 
             elif len(self.var_list) == 2:
-                [dx, dy] =  differentiable_2D(self.eq, self.diff, self.domain, self.in_domain, string, self.var_list)
+                [dx, dy] = differentiable_2D(self.eq, self.diff, self.domain, self.in_domain, string, self.var_list)
                 if dx == 1 and dy == 1:
                     self.dt_label.setText('Differentiable at direction of ' + self.var_list[0] + ' and ' + self.var_list[1] + ' at ' + string)
                 elif dx == 1 and dy == 0:

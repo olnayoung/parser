@@ -8,10 +8,7 @@ from extra_funcs import is_same
 from math import nan, e
 from copy import deepcopy
 
-
-### main function
 def calcul(eq, var_list):
-
     try:
         eq = eq.replace(" ", "")
         eq_list = tokenize(eq, var_list)
@@ -28,14 +25,10 @@ def calcul(eq, var_list):
             ans = E.eval()
             domain, in_domain = E.get_domain()
 
-            eq_diff = []
-            for n in range(len(var_list)):
-                eq_diff.append(from_list_to_str('', diff(ans, var_list[n], var_list)))
-
-            return [from_list_to_str('', ans), eq_diff, domain, in_domain]
+            return [ans, domain, in_domain]
 
     except Exception as e:
-        return 'Error', e, 0, 0
+        return 'Error', e, 0
 
 
 def change_x_to_num(eq, var_list, string):
@@ -73,9 +66,9 @@ def change_x_to_num(eq, var_list, string):
             for n in range(4, len(eq_list)-6):
                 sig_eq += str(eq_list[n])
 
-            ans, _, _, _ = sigma(eq_list[2], sig_eq, eq_list[-5], eq_list[-3], var_list)
+            ans, _, _ = sigma(eq_list[2], sig_eq, eq_list[-5], eq_list[-3], var_list)
 
-            return ans
+            return ans[0]
 
         E = Parser(eq_list, var_list)
         # print('tree: ', str(E))
@@ -300,25 +293,33 @@ def sigma(k, equation, start, end, var_list = None):
     if check:
         ap_var_list = var_list.copy()
         ap_var_list.append(k)
-        eq, a, b, c = calcul(equation, ap_var_list)
-        ans = 'sig(' + k + ', ' + eq + ', ' + str(start) + ', ' + str(end) + ')'
+        eq, a, b = calcul(equation, ap_var_list)
+        # eq = from_list_to_str('', eq)
+        ans = 'sig(' + k + ', ' + from_list_to_str('', eq) + ', ' + str(start) + ', ' + str(end) + ')'
 
         eq_diff = []
 
         for n in range(len(var_list)):
-            eq_diff.append('sig(' + k + ', ' + a[n] + ', ' + str(start) + ', ' + str(end) + ')')
+            nothing = diff(eq, var_list[n], var_list)
+
+            if nothing[0] == 'Eror':
+                eq_diff.append('Error' + nothing[1].args[0])
+            else:
+                nothing = from_list_to_str('', nothing[0])
+                eq_diff.append('sig(' + k + ', ' + nothing + ', ' + str(start) + ', ' + str(end) + ')')
         
-        return [ans, eq_diff, b, c]
+        return [[ans, eq_diff], a, b]
     
     else:
         ans = 0
-        eq, a, b, c = calcul(equation, [k])
+        eq, a, b = calcul(equation, [k])
+        eq = from_list_to_str('', eq)
 
         for n in range(int(start), int(end)+1):
             string = k + '=' + str(n)
             ans += float(change_x_to_num(eq, [k], string))
 
-    return [str(ans), [], [], []]
+    return [[ans], [], []]
 
 
 def check_domain(domain, in_domain, var_list, input):
@@ -338,7 +339,7 @@ def check_domain(domain, in_domain, var_list, input):
     for n in range(len(in_domain)):
         opt = change_x_to_num(in_domain[n], var_list, input)
         if is_digit(opt):
-            if float(opt) <= 0:
+            if float(opt) < 0:
                 return 0
         else:
             return 0
