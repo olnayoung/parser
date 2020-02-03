@@ -71,7 +71,6 @@ def change_x_to_num(eq, var_list, string):
             return ans[0]
 
         E = Parser(eq_list, var_list)
-        # print('tree: ', str(E))
 
         ans = E.eval()
         
@@ -198,7 +197,6 @@ def differentiable_1D(eq, eq_diff, domain, in_domain, string, var_list):
             return 0
 
     except Exception as e:
-        print('Error: ', e)
         return '*Error* ' + str(e)
 
 def differentiable_2D(eq, eq_diff, domain, in_domain, string, var_list):
@@ -277,7 +275,6 @@ def differentiable_2D(eq, eq_diff, domain, in_domain, string, var_list):
         return [dx, dy]
 
     except Exception as e:
-        print('Error: ', e)
         return '*Error* ', str(e)
 
 
@@ -294,7 +291,6 @@ def sigma(k, equation, start, end, var_list = None):
         ap_var_list = var_list.copy()
         ap_var_list.append(k)
         eq, a, b = calcul(equation, ap_var_list)
-        # eq = from_list_to_str('', eq)
         ans = 'sig(' + k + ', ' + from_list_to_str('', eq) + ', ' + str(start) + ', ' + str(end) + ')'
 
         eq_diff = []
@@ -302,7 +298,7 @@ def sigma(k, equation, start, end, var_list = None):
         for n in range(len(var_list)):
             nothing = diff(eq, var_list[n], var_list)
 
-            if nothing[0] == 'Eror':
+            if nothing[0] == 'Error':
                 eq_diff.append('Error' + nothing[1].args[0])
             else:
                 nothing = from_list_to_str('', nothing[0])

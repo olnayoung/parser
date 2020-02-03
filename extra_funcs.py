@@ -37,7 +37,11 @@ def delete_zero(left):
         if left[n][0] == 0:
             delete.append(n)
 
-    return delete
+    while delete:
+        t = delete.pop()
+        del left[t]
+
+    return left
 
 def double_bracket(temp):
     if is_gathered(temp) and len(temp) == 1:
@@ -130,12 +134,12 @@ def plus_idx(many, additional, var_list):
         else:
             return 0
     
-    if not isinstance(many, list):
-        many = [many]
-    if not is_gathered(many):
-        many = [many]
-    if not isinstance(additional, list):
-        additional = [additional]
+    # if not isinstance(many, list):
+    #     many = [many]
+    # if not is_gathered(many):
+    #     many = [many]
+    # if not isinstance(additional, list):
+    #     additional = [additional]
 
     for n in range(len(many)):
         if len(many[n]) > len(additional):
@@ -272,10 +276,7 @@ def plus(left, sequence, var_list):
         for n in range(len(sequence)):
             left = plus_sep(left, sequence[n], var_list)
 
-    delete = delete_zero(left)
-    while delete:
-        t = delete.pop()
-        del left[t]
+    left = delete_zero(left)
 
     if not left:
         left.append([0])
@@ -302,6 +303,9 @@ def minus(left, sequence, var_list):
     if not is_gathered(left):
         left = [left]
 
+    if not isinstance(sequence, list):
+        sequence = [sequence]
+
     if not is_gathered(sequence):
         left = minus_sep(left, sequence, var_list)
     
@@ -309,10 +313,7 @@ def minus(left, sequence, var_list):
         for n in range(len(sequence)):
             left = minus_sep(left, sequence[n], var_list)
 
-    delete = delete_zero(left)
-    while delete:
-        t = delete.pop()
-        del left[t]
+    left = delete_zero(left)
 
     if not left:
         left.append([0])
@@ -477,8 +478,6 @@ def power(left, sequence, var_list):
 
             for n in range(int(len(left)/2)):
                 l_idx = 2*n + 1
-
-                # ans.append(left[l_idx])
 
                 if not is_gathered(sequence) and len(sequence) == 1 and is_digit(left[l_idx+1]):
                     if left[l_idx+1] * sequence[0] == 1 and left[l_idx+1] > 1 and 0 < sequence[0] < 1:
@@ -717,6 +716,12 @@ def diff(input, var, var_list):
 
                             temp = diff([1, input_rep[idx], 1], var, var_list)[0]
                             input_rep = many_mul([], deepcopy(input_rep), temp, var_list)
+                    
+                    else:
+                        temp = diff(input[idx], var, var_list)[0]
+
+                        if temp == [0]:
+                            continue
 
                         input_rep[0] *= input_rep[idx+1]
                         input_rep[idx+1] -= 1

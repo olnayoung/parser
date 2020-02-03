@@ -202,9 +202,9 @@ class App(QMainWindow):
             self.domain_title_label.setText('Domain')
             self.domain_label.setText(str_domain)
 
-        if not is_digit(self.eq):
-            if len(self.var_list) < 3 and self.eq[0:3] != 'sig':
-                self.open_new_dialog(self.eq, self.diff, self.domain, self.in_domain, self.var_list)
+        # if not is_digit(self.eq):
+        #     if len(self.var_list) < 3 and self.eq[0:3] != 'sig':
+        #         self.open_new_dialog(self.eq, self.diff, self.domain, self.in_domain, self.var_list)
 
         if not self.diff:
             self.a_label.setText('Answer is: ' + str(self.eq))
@@ -212,12 +212,14 @@ class App(QMainWindow):
             self.da_label.setText('')
             return 0
         
+        print(self.eq)
         diff_ans = ''
         if isinstance(self.diff, str):
             diff_ans = self.diff
         else:
             for n in range(len(self.diff)):
                 diff_ans = diff_ans + 'Differentiated by ' + self.var_list[n] + ': ' + self.diff[n] + '\n'
+                print(self.diff[n])
 
         self.da_label.setText(diff_ans)
 
@@ -249,7 +251,7 @@ class App(QMainWindow):
             return 0
 
         string = self.differentiable.text()
-
+        
         if self.var_list:
             if self.eq[0:3] == 'sig':
                 self.dt_label.setText('It is sigma')
@@ -258,10 +260,8 @@ class App(QMainWindow):
                 differentiable = differentiable_1D(self.eq, self.diff, self.domain, self.in_domain, string, self.var_list)
                 if differentiable == 1:
                     self.dt_label.setText('Differentiable at ' + string)
-                elif differentiable == 0:
-                    self.dt_label.setText('Non differentiable at ' + string)
                 else:
-                    self.dt_label.setText(differentiable)
+                    self.dt_label.setText('Non differentiable at ' + string)
 
             elif len(self.var_list) == 2:
                 [dx, dy] = differentiable_2D(self.eq, self.diff, self.domain, self.in_domain, string, self.var_list)
@@ -274,7 +274,8 @@ class App(QMainWindow):
                 elif dx == 0 and dy == 0:
                     self.dt_label.setText('Non differentiable at direction of ' + self.var_list[0] + ' and ' + self.var_list[1] + ' at ' + string)
                 else:
-                    self.dt_label.setText(dx + dy)
+                    self.dt_label.setText('Non differentiable at direction of ' + self.var_list[0] + ' and ' + self.var_list[1] + ' at ' + string)
+                    # self.dt_label.setText(dx + dy)
         return 0
 
     def open_new_dialog(self, eq, eq_diff, domain, in_domain, var_list):
@@ -430,10 +431,6 @@ class NewWindow(QDialog):
             return 0
         
         self.plot()
-
-    # def get_interval(self):
-
-    #     self.plot()
 
     def plot_2D_graph(self, equation):
         plt.grid()

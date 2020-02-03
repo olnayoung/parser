@@ -2,7 +2,7 @@
 2/pi+e, ans = 3.3549016008266266
 sin(sin(1+3/2)), ans = 0.5633808209655249
 sin(x*y-x*2), ans = sin(x*y-2.0*x), dx = y*cos(x*y-2.0*x)-2.0*cos(x*y-2.0*x), dy = x*cos(x*y-2.0*x), Differentiable at x=0, y=0
-log(e^(2*x))+log(x^2,y), ans = 2.0*x + 2*log(x,y), dx = 2.0*x^-1*log(y,2.718281828459045)^-1 + 2.0, dy = 0, Non differentiable at x=0, y=0
+log(e^(2*x))+log(x^2,y), ans = 2.0*x + log(x^2,y), dx = 2.0*x^-1*log(y,2.718281828459045)^-1 + 2.0, dy = 0, Non differentiable at x=0, y=0
 (x+1)^2-x^2, ans = 2.0*x+1, dx = 2.0, Differentiable at x=-1, y=0
 x^2*y/sin(x), ans = x^2*y*sin(x)^-1, dx = 2.0*x*y*sin(x)^-1-x^2*y*sin(x)^(-2)*cos(x), dy = x^2*sin(x)^-1, Non differentiable at x=0, y=1
 ---, ans = Error

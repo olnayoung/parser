@@ -1,11 +1,3 @@
-# E  := T E'
-# E' := ( '+' | '-' ) T E' | e
-# T  := S T'
-# T' := ( '*' | '/' ) S T' | e
-# S  := F S'
-# S' := '^' F S'
-# F  := '(' E ')' | '-' F | int | log F | sin F | ...
-
 from math import log, sin, cos, tan, pi, e, nan
 from extra_funcs import is_digit
 from extra_funcs import is_gathered
@@ -234,14 +226,14 @@ class Factor(Expr):
                         if [temp[0], temp[1], 1] == [1, base, 1]:
                             return many_mul([], [1], [temp[2]], var_list)
                         else:
-                            # return [1, ['log', temp, base], 1]
-                            return many_mul([], [1, ['log', [temp[0], temp[1], 1], base], 1], [temp[2]], var_list)
+                            return [1, ['log', temp, base], 1]
+                            # return many_mul([], [1, ['log', [temp[0], temp[1], 1], base], 1], [temp[2]], var_list)
                     else:
                         if [temp[0], temp[1], 1] == base:
                             return many_mul([], [1], [temp[2]], var_list)
                         else:
-                            # return [1, ['log', temp, base], 1]
-                            return many_mul([], [1, ['log', [temp[0], temp[1], 1], base], 1], [temp[2]], var_list)
+                            return [1, ['log', temp, base], 1]
+                            # return many_mul([], [1, ['log', [temp[0], temp[1], 1], base], 1], [temp[2]], var_list)
                 else:
                     return [1, ['log', temp, base], 1]
         
@@ -372,7 +364,6 @@ def takeFactor(tokens):
             tokens.takeIt(',')
             expr2 = takeExpr(tokens)
         tokens.takeIt(')')
-        # factor = takeFactor(tokens)
         return Factor(expr1, func, expr2)  # log(expr1, expr2) = log_expr2 (expr1)
 
     else:
