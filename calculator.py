@@ -148,8 +148,7 @@ def plot_3D(eq, domain, in_domain, var_list, ran1, ran2, interval_x, interval_y)
 
 def differentiable_1D(eq, eq_diff, domain, in_domain, string, var_list):
     try:
-
-        epsilon = 10 ** -5
+        epsilon = 10 ** -10
 
         var = []
         value = []
@@ -189,8 +188,6 @@ def differentiable_1D(eq, eq_diff, domain, in_domain, string, var_list):
         else:
             return 0
 
-        epsilon = epsilon * 1000
-
         if is_same([ans_l_p, ans_l_m, ans], epsilon) and is_same([ans_d_l_p, ans_d_l_m, ans_d], epsilon):
             return 1
         else:
@@ -201,9 +198,6 @@ def differentiable_1D(eq, eq_diff, domain, in_domain, string, var_list):
 
 def differentiable_2D(eq, eq_diff, domain, in_domain, string, var_list):
     try:
-        dx = -1
-        dy = -1
-
         epsilon = 10**(-10)
 
         var = []
@@ -235,7 +229,7 @@ def differentiable_2D(eq, eq_diff, domain, in_domain, string, var_list):
                 ans_l_x.append(change_x_to_num(eq, var, temp_string))
                 ans_l_dx.append(change_x_to_num(eq_diff[0], var, temp_string))
             else:
-                dx = 0
+                return [0, 0]
 
         for n in range(len(PlusMinus_epsilon)):
             temp_string = var[0] + '=' + value[0] + ',' + var[1] + '=' + str(float(value[1])+PlusMinus_epsilon[n])
@@ -243,33 +237,32 @@ def differentiable_2D(eq, eq_diff, domain, in_domain, string, var_list):
                 ans_l_y.append(change_x_to_num(eq, var, temp_string))
                 ans_l_dy.append(change_x_to_num(eq_diff[0], var, temp_string))
             else:
-                dy = 0
+                return [0, 0]
 
         if check_domain(domain, in_domain, var, string):
             ans = change_x_to_num(eq, var, string)
             ans_dx = change_x_to_num(eq_diff[0], var, string)
             ans_dy = change_x_to_num(eq_diff[1], var, string)
         else:
-            dx = 0
-            dy = 0
+            return [0, 0]
 
         epsilon = epsilon * 10
 
-        if dx == -1 and is_same([ans_l_x[0], ans_l_x[1], ans], epsilon):
+        if is_same([ans_l_x[0], ans_l_x[1], ans], epsilon):
             if is_same([ans_l_dx[0], ans_l_dx[1], ans_dx], epsilon):
                 dx = 1
             else:
-                dx = 0
+                return [0, 0]
         else:
-            dx = 0
+            return [0, 0]
 
-        if dy == -1 and is_same([ans_l_y[0], ans_l_y[1], ans], epsilon):
+        if is_same([ans_l_y[0], ans_l_y[1], ans], epsilon):
             if is_same([ans_l_dy[0], ans_l_dy[1], ans_dy], epsilon):
                 dy = 1
             else:
-                dy = 0
+                return [0, 0]
         else:
-            dy = 0
+            return [0, 0]
         
 
         return [dx, dy]

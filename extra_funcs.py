@@ -2,6 +2,7 @@ from math import log, sin, cos, tan, pi, e, inf
 from copy import deepcopy
 import math
 
+# check if it is digit
 def is_digit(value):
   try:
     float(value)
@@ -9,11 +10,7 @@ def is_digit(value):
   except:
     return False
 
-
-def is_oper(oper):
-    return oper in ['+', '-', '*', '/']
-
-
+# check if it is polynomial
 def is_gathered(left):
 
     if isinstance(left[0], list):
@@ -21,7 +18,7 @@ def is_gathered(left):
     else:
         return False
 
-
+# used when checking differentiable
 def is_same(values, epsilon):
     for n in range(len(values)):
         for m in range(n, len(values)):
@@ -31,6 +28,7 @@ def is_same(values, epsilon):
 
     return 1
 
+# (x - x = 0) or (x + -x = 0) -> delete
 def delete_zero(left):
     delete = []
     for n in range(len(left)):
@@ -43,11 +41,13 @@ def delete_zero(left):
 
     return left
 
+# [[x]] -> [x]
 def double_bracket(temp):
     if is_gathered(temp) and len(temp) == 1:
         temp = temp[0]
     return temp
 
+# variables -> sin -> cos -> tan -> log -> digit
 def get_priority(var_list):
     priority = {}
     num = 0
@@ -67,12 +67,14 @@ def get_priority(var_list):
 
     return priority
 
+# canonicalization when multiply
 def mul_idx(one, additional, var_list):
     priority = get_priority(var_list)
 
     for n in range(int(len(one)/2)):
         idx = 2*n+1
 
+        # get priority
         if is_gathered(one[idx]):
             a = multi_idx(one[idx], additional, var_list)
             if a == 0:
@@ -103,6 +105,7 @@ def mul_idx(one, additional, var_list):
             else:
                 pri_2 = priority[additional]
 
+        # get order with priority
         if pri_1 > pri_2:
             return idx
 
@@ -125,6 +128,7 @@ def mul_idx(one, additional, var_list):
 
     return len(one)
 
+# canonicalization when doing plus
 def plus_idx(many, additional, var_list):
     priority = get_priority(var_list)
 
@@ -134,12 +138,12 @@ def plus_idx(many, additional, var_list):
         else:
             return 0
     
-    # if not isinstance(many, list):
-    #     many = [many]
-    # if not is_gathered(many):
-    #     many = [many]
-    # if not isinstance(additional, list):
-    #     additional = [additional]
+    if not isinstance(many, list):
+        many = [many]
+    if not is_gathered(many):
+        many = [many]
+    if not isinstance(additional, list):
+        additional = [additional]
 
     for n in range(len(many)):
         if len(many[n]) > len(additional):
@@ -181,6 +185,9 @@ def plus_idx(many, additional, var_list):
             if pri_1 < priority['sin']:
                 if plus_idx(many[n][2], additional[2], var_list) == 0:
                     return n
+
+                if multi_idx(deepcopy(many[n][3:]).insert(0,many[n][0]), deepcopy(additional[3:]).insert(0, additional[0]), var_list) == 0:
+                    return n
                 else:
                     continue
 
@@ -216,11 +223,17 @@ def plus_idx(many, additional, var_list):
     
     return len(many)
 
-def multi_idx(many, additional, var_list):      # return 0: append prev, return 1: append after
+# canonicalization ex) sin(x+1) & sin(y) -> compare (x+1) & y
+def multi_idx(many, additional, var_list):      # return 0: append prev, return 1: append after, return 2: same
     if many == additional:
         return 2
 
     if not is_gathered(many) and not is_gathered(additional):
+        if len(many) > len(additional):
+            return 0
+        elif len(many) < len(additional):
+            return 1
+
         a = mul_idx(many, additional[1], var_list)
         if a == len(many):
             return 1
@@ -308,7 +321,6 @@ def minus(left, sequence, var_list):
 
     if not is_gathered(sequence):
         left = minus_sep(left, sequence, var_list)
-    
     else:
         for n in range(len(sequence)):
             left = minus_sep(left, sequence[n], var_list)
@@ -492,8 +504,7 @@ def power(left, sequence, var_list):
 
     return ans
 
-
-
+# notation
 def from_list_to_str(output, input):
     if is_gathered(input):
         for n in range(len(input)):
@@ -592,8 +603,8 @@ def domain_to_string(eq, var_list):
 
     return domain
 
-
-def add_domain(eq, in_eq, domain_1, domain_2):
+# x^n, define domain with n
+def add_domain(eq, in_eq, domain_1, domain_2):      # x^n -> (≠ 0, ≥ 0, x, n)
     if is_digit(domain_2):
         if domain_2 < 0 and domain_1 not in eq and domain_1 not in in_eq:
             eq.append(domain_1)
@@ -611,13 +622,13 @@ def add_domain(eq, in_eq, domain_1, domain_2):
                     eq.remove(domain_1)
     return eq, in_eq
 
-
+# differentiate
 def diff(input, var, var_list):
     try:
         funcs_list = ['sin', 'cos', 'tan']
         output = [0]
 
-        if is_gathered(input):                  # if it is polynomial
+        if is_gathered(input):                          # if it is polynomial
             for t in range(len(input)):
                 temp = diff(input[t], var, var_list)[0]
 
@@ -627,13 +638,13 @@ def diff(input, var, var_list):
                     else:
                         output = plus(output, temp, var_list)
 
-        else:
+        else:                                           # if it is monomial
             for n in range(int(len(input)/2)):
 
                 input_rep = deepcopy(input)
                 idx = 2*n + 1
 
-                if input[idx] == var:
+                if input[idx] == var:                   # one variable and not exponential: ex) x^3
                     if is_digit(input[idx+1]):
                         input_rep[0] *= input[idx+1]    
                         input_rep[idx+1] -= 1
@@ -648,7 +659,7 @@ def diff(input, var, var_list):
                     output = plus(deepcopy(output), input_rep, var_list)
 
                 elif isinstance(input[idx], list) and len(input[idx]) > 1:
-                    if input[idx][0] in funcs_list:
+                    if input[idx][0] in funcs_list:             # trigonometric functions
                         if input[idx+1] == 1:
                             if input[idx][0] == 'sin':
                                 input_rep[idx][0] = 'cos'
@@ -689,7 +700,7 @@ def diff(input, var, var_list):
                             if input_rep[0] == 0:
                                 continue
 
-                    elif input[idx][0] == 'log':
+                    elif input[idx][0] == 'log':            # logarithmic function
                         if input_rep[idx+1] == 1:
                             inside = deepcopy(input_rep[idx])
                             temp = diff(input_rep[idx][1], var, var_list)[0]
@@ -717,7 +728,7 @@ def diff(input, var, var_list):
                             temp = diff([1, input_rep[idx], 1], var, var_list)[0]
                             input_rep = many_mul([], deepcopy(input_rep), temp, var_list)
                     
-                    else:
+                    else:                                               # more than one variable: ex) (x+1)^3
                         temp = diff(input[idx], var, var_list)[0]
 
                         if temp == [0]:
@@ -734,7 +745,7 @@ def diff(input, var, var_list):
 
                     output = plus(deepcopy(output), input_rep, var_list)
                 
-                elif isinstance(input[idx+1], list):
+                elif isinstance(input[idx+1], list):                    # exponential function
                     if input[idx] != [math.e]:
                         if len(input[idx]) == 1 and is_digit(input[idx][0]):
                             input_rep[0] *= log(input[idx][0], math.e)
