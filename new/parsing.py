@@ -1,22 +1,22 @@
 from math import log, sin, cos, tan, pi, e, nan
-from extra_funcs import is_digit
-from extra_funcs import is_gathered
-from extra_funcs import many_mul
-from extra_funcs import plus
-from extra_funcs import minus
-from extra_funcs import power
-from extra_funcs import many_div
-from extra_funcs import double_bracket
-from extra_funcs import add_domain
 from copy import deepcopy
+from extra_funcs import is_digit
 
 NUMBER = [float, int]
-
 
 class Expr(object):
     def __init__(self, term, exprTail):
         self.term = term
         self.exprTail = exprTail
+        self.coef = 1
+        self.expo = 1
+        self.sign = None
+
+    def __add__(self, left):
+        return left
+
+    def __mul__(self, left):
+        return left
 
     def eval(self):
         if self.exprTail is None:
@@ -37,12 +37,50 @@ class ExprTail(object):
         self.exprTail = exprTail
 
     def calc(self, left):
-        eval_t = self.term.eval()
-        
-        if self.op is '+':
-            left = plus(left, eval_t, var_list)
-        elif self.op is '-':
-            left = minus(left, eval_t, var_list)
+        term = self.term.eval()
+
+        if self.op is '-':
+            term.coef *= -1
+
+        if isinstance(left.contain, dict):
+            if isinstance(term.contain, dict):
+                dic_term_key_list = list(term.contain.keys())
+                for n in range(len(term.contain)):
+                    if dic_term_key_list[n] in left.contain:
+                        if term.coef == -1:
+                            term.contain[dic_term_key_list[n]].coef *= -1
+                        a = deepcopy(left.contain[dic_term_key_list[n]]) + term.contain[dic_term_key_list[n]]
+                        del left.contain[dic_term_key_list[n]]
+                        if a.contain != 0:
+                            left.contain[(a.sign, a.contain, a.expo)] = a
+                    else:
+                        if term.coef == -1:
+                            term.contain[dic_term_key_list[n]].coef *= -1
+                        left[dic_term_key_list[n]] = term.contain[dic_term_key_list[n]]
+                
+                if len(left.contain) == 0:
+                    left.contain = 0
+                elif len(left.contain) == 1:
+                    dic_left_key_list = list(left.contain.keys())
+                    left.contain = left.contain[dic_left_key_list[0]]
+
+            else:
+                if (term.sign, term.contain, term.expo) in left.contain:
+                    a = deepcopy(left.contain[(term.sign, term.contain, term.expo)]) + term
+                    del left.contain[(term.sign, term.contain, term.expo)]
+
+                    if a.contain != 0:
+                        left.contain[(a.sign, a.contain, a.expo)] = a
+                    elif len(left.contain) == 1:
+                        dic_left_key_list = list(left.contain.keys())
+                        left.coef *= left.contain[dic_left_key_list[0]].coef
+                        left.expo *= left.contain[dic_left_key_list[0]].expo
+                        left.contain = left.contain[dic_left_key_list[0]].contain
+                    
+                else:
+                    left.contain[(term.sign, term.contain, term.expo)] = term
+        else:
+            left += term
 
         if self.exprTail is None:
             return left
@@ -56,29 +94,24 @@ class Term(Expr):
     def __init__(self, sequence, termTail):
         self.sequence = sequence
         self.termTail = termTail
+        self.coef = 1
+        self.expo = 1
+        self.sign = None
+
+    def __add__(self, left):
+        return left
+
+    def __mul__(self, left):
+        self.sequence *= left
+        return left
 
     def eval(self):
-        global eq, in_eq
-
-        left = self.sequence.eval()
-
         if self.termTail is None:
-            domain = left
+            left = self.sequence.eval()
         else:
-            domain = self.termTail.calc(left)
+            left = self.termTail.calc(self.sequence.eval())
 
-        if is_gathered(domain):
-            for n in range(len(domain)):
-                for m in range(int(len(domain[n])/2)):
-                    idx = 2*m + 1
-                    eq, in_eq = add_domain(eq, in_eq, domain[n][idx], domain[n][idx+1])
-                    
-        else:
-            for m in range(int(len(domain)/2)):
-                idx = 2*m + 1
-                eq, in_eq = add_domain(eq, in_eq, domain[idx], domain[idx+1])
-
-        return domain
+        return left
 
     def __repr__(self):
         return "Term(%s, %s)" % (self.sequence, self.termTail)
@@ -93,12 +126,34 @@ class TermTail(object):
         sequence = self.sequence.eval()
 
         if self.op is '*':
-            left = many_mul([], left, sequence, var_list)
+            if isinstance(left.contain, dict):
+                if isinstance(sequence.contain, dict):
+                    dic_left_key_list = list(left.contain.keys())
+                    dic_seq_key_list = list(sequence.contain.keys())
+                    empty_dic = {}
+                    for n in range(len(left.contain)):
+                        for m in range(len(sequence.contain)):
+                            a = deepcopy(left.contain[dic_left_key_list[n]]) * deepcopy(sequence.contain[dic_seq_key_list[m]])
+
+                            if (a.sign, a.contain, a.expo) in empty_dic:
+                                empty_dic[(qa.sign, a.contain, a.expo)] += a
+                            else:
+                                empty_dic[(a.sign, a.contain, a.expo)] = a
+
+                    left.coef = 1
+                    left.contain = empty_dic
+                    left.expo = 1
+
+                else:
+                    dic_key_list = list(left.contain.keys())
+                    for n in range(len(left.contain)):
+                        left.contain[dic_key_list[n]] *= sequence
+            else:
+                left *= sequence
 
         elif self.op is '/':
-            left = many_div([], left, sequence, var_list)
-            
-        left = double_bracket(left)
+            sequence.expo *= -1
+            left *= sequence
 
         if self.termTail is None:
             return left
@@ -112,6 +167,15 @@ class Sequence(Expr):
     def __init__(self, factor, sequenceTail):
         self.factor = factor
         self.sequenceTail = sequenceTail
+        self.coef = 1
+        self.expo = 1
+        self.sign = None
+
+    def __add__(self, left):
+        return left
+
+    def __mul__(self, left):
+        return left
 
     def eval(self):
         left = self.factor.eval()
@@ -134,18 +198,13 @@ class SequenceTail(object):
         factor = self.factor.eval()
 
         if self.op == '^':
-            if factor == [2]:
-                left = many_mul([], left, left, var_list)
+            if is_digit(left.contain) and is_digit(factor.contain):
+                left.contain = left.contain ** factor.contain
             else:
-                if is_digit(factor[0]) and len(factor) == 1:
-                    if 0 < factor[0] < 1:
-                        if left not in in_eq:
-                            in_eq.append(left)
+                left.expo = factor * left.expo
+            # left.expo *= factor
+            # left = left ** factor
 
-                left = power(left, factor, var_list)
-
-            left = double_bracket(left)
-        
         if self.sequenceTail is None:
             return left
         else:
@@ -155,101 +214,112 @@ class SequenceTail(object):
         return "SequenceTail(%s, %s, %s)" %(self.op, self.factor, self.sequenceTail)
 
 class Factor(Expr):
+    funcs = {'sin': sin, 'cos': cos, 'tan': tan, 'e': e, 'pi': pi}
+    funcs_list = ['sin', 'cos', 'tan']
+
     def __init__(self, expr, sign = None, base = None, k = None):
         self.expr = expr
-        self.sign = sign
-        self.funcs = {'sin': sin, 'cos': cos, 'tan': tan, 'e': e, 'pi': pi}
-        self.funcs_list = ['sin', 'cos', 'tan']
+        self.sign = sign            # -, sin, cos, tan, log
         self.base = base
-        self.k = k
+        # self.k = k
+        self.coef = 1
+        self.contain = 0
+        self.expo = 1
+
+    def __add__(self, left):
+        if is_digit(self.contain) and is_digit(left.contain):
+            if left.coef == 1:
+                self.contain += left.contain
+            else:
+                self.contain -= left.contain
+
+        elif self.contain == left.contain:
+            if self.expo == left.expo:
+                self.coef += left.coef
+
+                if self.coef == 0:
+                    self.coef = 1
+                    self.contain = 0
+                    self.expo = 1
+
+            else:
+                dic = {(self.sign, self.contain, self.expo) : self, (left.sign, left.contain, left.expo) : left}
+                self.coef = 1
+                self.contain = deepcopy(dic)
+                self.expo = 1
+
+        else:
+            dic = {(self.sign, self.contain, self.expo) : self, (left.sign, left.contain, left.expo) : left}
+            self.coef = 1
+            self.contain = deepcopy(dic)
+            self.expo = 1
+
+        return self
+
+    def __mul__(self, left):
+        if is_digit(left):
+            self.contain *= left
+        elif is_digit(self.contain) and is_digit(left.contain):
+            
+            expo = left.expo if is_digit(left.expo) else left.expo.contain
+            if expo == 1:
+                self.contain *= left.contain
+            else:
+                self.contain /= left.contain
+
+        elif is_digit(self.contain):
+            if self.expo == 1:
+                left.coef *= (self.coef * self.contain)
+            else:
+                left.coef /= (self.coef * self.contain)
+            return left
+
+        elif is_digit(left.contain):
+            if left.expo == 1:
+                self.coef *= (left.coef * left.contain)
+            else:
+                self.coef /= (left.coef * left.contain)
+        else:
+            if self.contain == left.contain:
+                self.coef *= left.coef
+                self.expo += left.expo
+
+                if self.expo == 0:
+                    if self.coef > 0:
+                        self.contain = self.coef
+                        self.coef = 1
+                    else:
+                        self.contain = self.coef * -1
+                        self.coef = -1
+                    self.expo = 1
+        return self
 
     def eval(self):
-        temp = self.expr.eval() if isinstance(self.expr, Expr) else self.expr
-        if temp in var_list:
-            temp = [1.0, temp, 1.0]
-        elif is_digit(temp):
-            temp = [float(temp)]
-        elif temp in ['e', 'pi']:
-            temp = [self.funcs[temp]]
-        elif is_gathered(temp) and len(temp) == 1:
-            temp = temp[0]
+        if isinstance(self.expr, Expr):
+            a = self.expr.eval()
+            self.contain = a
+        else:
+            self.contain = self.expr
 
         if self.sign is '-':
-            temp = many_mul([], [-1], temp, var_list)
-            return temp
+            self.coef *= -1
+            return self
 
         elif self.sign in self.funcs_list:
             func = self.funcs[self.sign]
 
-            if not is_digit(temp[0]) or len(temp) > 1 and self.sign == 'tan':
-                if temp not in eq:
-                    temp_pi = plus(deepcopy(temp), [pi/2], var_list)
-                    if temp_pi not in eq:
-                        eq.append(temp_pi)
+            if is_digit(self.contain):
+                self.contain = func(self.contain)
+                self.sign = None
 
-            if is_digit(temp[0]) and len(temp) == 1:
-                if self.sign == 'tan' and temp[0] == (pi/2):
-                    raise Exception('Cannot define tan(pi/2)')
-                else:
-                    return [func(temp[0])]
-            else:
-                return [1, [self.sign, temp], 1]
-
-        elif self.sign == 'log':
-            if not is_digit(temp[0]) or len(temp) > 1:
-                if temp not in in_eq:
-                    in_eq.append(temp)
-                if temp not in eq:
-                    eq.append(temp)
-
-            if self.base == None:
-                base = [e]
-            else:
-                base = self.base.eval() if isinstance(self.base, Expr) else self.base
-
-                if not is_digit(base[0]) or len(base) > 1:
-                    if base not in in_eq:
-                        in_eq.append(base)
-                    if base not in eq:
-                        eq.append(base)
-
-                base_1 = plus(deepcopy(base), [-1], var_list)
-                if base_1 not in eq:
-                    if not is_digit(base[0]) or len(base) > 1:
-                        eq.append(base_1)
-
-            if is_digit(temp[0]) and len(temp) == 1 and is_digit(base[0]) and len(base) == 1:
-                return [log(temp[0], base[0])]
-            else:
-                if not is_gathered(temp) and len(temp) == 3:
-                    if is_digit(base[0]) and len(base) == 1:
-                        if [temp[0], temp[1], 1] == [1, base, 1]:
-                            return many_mul([], [1], [temp[2]], var_list)
-                        else:
-                            return [1, ['log', temp, base], 1]
-                            # return many_mul([], [1, ['log', [temp[0], temp[1], 1], base], 1], [temp[2]], var_list)
-                    else:
-                        if [temp[0], temp[1], 1] == base:
-                            return many_mul([], [1], [temp[2]], var_list)
-                        else:
-                            return [1, ['log', temp, base], 1]
-                            # return many_mul([], [1, ['log', [temp[0], temp[1], 1], base], 1], [temp[2]], var_list)
-                else:
-                    return [1, ['log', temp, base], 1]
+        # elif self.sign == 'log':
         
-        elif self.sign == 'sig':
-            var_list.append(self.k)
-            temp = self.expr.eval() if isinstance(self.expr, Expr) else self.expr
-            var_list.pop()
-            # sigma(self.k, temp, self.base[0], self.base[1], var_list)
-
-            return [0, 'sig']
-
+        # elif self.sign == 'sig':
         
-        return temp
+        return self
 
     def __repr__(self):
-        return "Factor(%s, %s)" % (self.sign, self.expr)
+        return "Factor(%s, %s, %s, %s)" % (self.sign, self.coef, self.contain, self.expo)
 
 
 class TokenList(object):
@@ -336,22 +406,22 @@ def takeFactor(tokens):
         tokens.takeIt(')')
         return Factor(expr, func)
     
-    elif tokens.getItem() == 'sig':
-        func = tokens.getItem()
-        tokens.takeIt(func)
-        tokens.takeIt('(')
-        k = tokens.getItem()
-        var_list.append(k)
-        tokens.shift()
-        tokens.takeIt(',')
-        expr = takeExpr(tokens)
-        var_list.pop()
-        tokens.takeIt(',')
-        start = tokens.takeIt(NUMBER)
-        tokens.takeIt(',')
-        end = tokens.takeIt(NUMBER)
-        tokens.takeIt(')')
-        return Factor(expr, 'sig', [start, end], k)
+    # elif tokens.getItem() == 'sig':
+    #     func = tokens.getItem()
+    #     tokens.takeIt(func)
+    #     tokens.takeIt('(')
+    #     k = tokens.getItem()
+    #     var_list.append(k)
+    #     tokens.shift()
+    #     tokens.takeIt(',')
+    #     expr = takeExpr(tokens)
+    #     var_list.pop()
+    #     tokens.takeIt(',')
+    #     start = tokens.takeIt(NUMBER)
+    #     tokens.takeIt(',')
+    #     end = tokens.takeIt(NUMBER)
+    #     tokens.takeIt(')')
+    #     return Factor(expr, 'sig', [start, end], k)
 
     elif tokens.getItem() == 'log':
         func = tokens.getItem()

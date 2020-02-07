@@ -2,7 +2,7 @@ from extra_funcs import is_digit
 
 def tokenize(eq, var_list):
     eq_list = []
-    funcs_list = ['log', 'sin', 'cos', 'tan', 'sig']
+    funcs_list = ['log', 'sin', 'cos', 'tan', 'pow', 'sig']
     op_list = ['+', '-', '*', '/', '^', '(', ')', ',']
     temp = '0'
 
